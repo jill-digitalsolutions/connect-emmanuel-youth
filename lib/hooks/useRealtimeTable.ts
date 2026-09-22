@@ -14,8 +14,15 @@ export function useRealtimeTable<T extends Record<string, unknown>>(
 
   useEffect(() => {
     const supabase = createClient();
+    // A unique-per-mount topic (rather than one derived only from
+    // table+filter) avoids colliding with a still-closing channel of the
+    // same name — e.g. under React Strict Mode's dev-only double-invoke of
+    // effects, which subscribes twice in a row and would otherwise reuse
+    // realtime-js's internal channel registry entry, leaving no listener
+    // attached once the first instance's cleanup tears it down.
+    const topic = `rt:${table}:${filter ?? "all"}:${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel(`rt:${table}:${filter ?? "all"}`)
+      .channel(topic)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table, filter },

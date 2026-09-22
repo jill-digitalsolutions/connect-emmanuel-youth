@@ -32,8 +32,17 @@ export function addDaysIso(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
+// Realtime payloads deliver timestamptz columns in Postgres's native
+// "YYYY-MM-DD HH:MM:SS.ffffff+00" format, while PostgREST (regular queries)
+// serializes them as proper ISO 8601 ("...T...+00:00"). Normalize both to
+// something `Date` parses reliably everywhere.
+function parseTimestamp(value: string) {
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  return new Date(normalized);
+}
+
 export function timeAgo(iso: string) {
-  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const diff = Math.max(0, Date.now() - parseTimestamp(iso).getTime());
   const hours = Math.floor(diff / 3600000);
   if (hours < 1) return "just now";
   if (hours < 24) return `${hours}h ago`;

@@ -68,7 +68,7 @@ export function FeedClient({
   }
 
   const sorted = useMemo(
-    () => [...posts].sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    () => [...posts].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")),
     [posts]
   );
 
