@@ -1,4 +1,4 @@
-import type { ColorTheme, CourseTrack } from "@/lib/types/database.types";
+import type { ColorTheme, CourseTrack, PostCategory } from "@/lib/types/database.types";
 
 export const MESSENGER_URL = "https://www.messenger.com";
 export const ZOOM_URL = "https://zoom.us/join";
@@ -8,6 +8,13 @@ export const CATEGORY_LABELS: Record<ColorTheme, string> = {
   coral: "Fellowship",
   plum: "Announcement",
   moss: "Calendar",
+};
+
+export const POST_CATEGORY_COLOR: Record<PostCategory, ColorTheme> = {
+  training: "amber",
+  fellowship: "coral",
+  announcement: "plum",
+  calendar: "moss",
 };
 
 export const TRACK_ICONS: Record<CourseTrack, string> = {

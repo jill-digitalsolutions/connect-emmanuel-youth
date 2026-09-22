@@ -33,6 +33,7 @@ export interface Database {
           role?: Role;
           created_at?: string;
         };
+        Relationships: [];
       };
       posts: {
         Row: {
@@ -52,6 +53,15 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["posts"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       courses: {
         Row: {
@@ -71,6 +81,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["courses"]["Insert"]>;
+        Relationships: [];
       };
       course_progress: {
         Row: {
@@ -86,6 +97,7 @@ export interface Database {
           modules_done?: number;
         };
         Update: Partial<Database["public"]["Tables"]["course_progress"]["Insert"]>;
+        Relationships: [];
       };
       sessions: {
         Row: {
@@ -107,6 +119,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["sessions"]["Insert"]>;
+        Relationships: [];
       };
       banners: {
         Row: {
@@ -128,6 +141,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["banners"]["Insert"]>;
+        Relationships: [];
       };
       events: {
         Row: {
@@ -147,6 +161,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["events"]["Insert"]>;
+        Relationships: [];
       };
       tasks: {
         Row: {
@@ -166,6 +181,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["tasks"]["Insert"]>;
+        Relationships: [];
       };
       photos: {
         Row: {
@@ -185,6 +201,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["photos"]["Insert"]>;
+        Relationships: [];
       };
       photo_likes: {
         Row: {
@@ -200,6 +217,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["photo_likes"]["Insert"]>;
+        Relationships: [];
       };
       photo_comments: {
         Row: {
@@ -217,8 +235,13 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["photo_comments"]["Insert"]>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
 
