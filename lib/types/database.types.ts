@@ -201,7 +201,15 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["photos"]["Insert"]>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "photos_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       photo_likes: {
         Row: {
