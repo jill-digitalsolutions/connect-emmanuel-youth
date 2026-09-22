@@ -1,0 +1,10 @@
+alter publication supabase_realtime add table public.posts;
+alter publication supabase_realtime add table public.tasks;
+alter publication supabase_realtime add table public.events;
+alter publication supabase_realtime add table public.photos;
+alter publication supabase_realtime add table public.photo_likes;
+alter publication supabase_realtime add table public.photo_comments;
+alter publication supabase_realtime add table public.courses;
+alter publication supabase_realtime add table public.course_progress;
+alter publication supabase_realtime add table public.sessions;
+alter publication supabase_realtime add table public.banners;

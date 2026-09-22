@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  --breakpoint-tablet: 860px;
+  --breakpoint-desktop: 1200px;
+
+  --color-ink: #0B1440;
+  --color-ink-2: #16215C;
+  --color-page: #F1F4FC;
+  --color-surface: #FFFFFF;
+  --color-text: #1A1B2E;
+  --color-text-soft: #5B5871;
+  --color-line: #E1E6F5;
+
+  --color-accent-from: #2F72F2;
+  --color-accent-to: #57A9FF;
+
+  --color-amber: #E8A33D;
+  --color-amber-ink: #7A4E0C;
+  --color-amber-bg: #FCEED9;
+
+  --color-coral: #E75C4C;
+  --color-coral-ink: #8A2C21;
+  --color-coral-bg: #FBE1DD;
+
+  --color-plum: #6B4A8A;
+  --color-plum-ink: #3E2A54;
+  --color-plum-bg: #EAE1F2;
+
+  --color-moss: #3F9169;
+  --color-moss-ink: #235339;
+  --color-moss-bg: #DEEEE4;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-page: #131425;
+  --color-surface: #1B1C33;
+  --color-text: #F1EFFA;
+  --color-text-soft: #ABA7C6;
+  --color-line: #302F52;
+  --color-amber-bg: #3B2C10;
+  --color-coral-bg: #3A1E1B;
+  --color-plum-bg: #2A1F3B;
+  --color-moss-bg: #163325;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--color-amber);
+  color: #201f2e;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-to);
+  outline-offset: 2px;
+}

@@ -1,0 +1,235 @@
+// Hand-authored to match supabase/migrations/0001_schema.sql.
+// Once the Supabase project is linked, regenerate with:
+//   npx supabase gen types typescript --project-id <ref> > lib/types/database.types.ts
+
+export type Role = "member" | "admin";
+export type PostCategory = "training" | "fellowship" | "announcement" | "calendar";
+export type CourseTrack = "Leadership" | "Bible Study" | "Media Team" | "Worship";
+export type TaskStatus = "todo" | "doing" | "done";
+export type ColorTheme = "amber" | "coral" | "plum" | "moss";
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          name: string;
+          avatar_url: string | null;
+          role: Role;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          name?: string;
+          avatar_url?: string | null;
+          role?: Role;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          avatar_url?: string | null;
+          role?: Role;
+          created_at?: string;
+        };
+      };
+      posts: {
+        Row: {
+          id: string;
+          title: string;
+          body: string | null;
+          category: PostCategory;
+          author_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          body?: string | null;
+          category: PostCategory;
+          author_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["posts"]["Insert"]>;
+      };
+      courses: {
+        Row: {
+          id: string;
+          title: string;
+          track: CourseTrack;
+          total_modules: number;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          track: CourseTrack;
+          total_modules: number;
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["courses"]["Insert"]>;
+      };
+      course_progress: {
+        Row: {
+          id: string;
+          course_id: string;
+          user_id: string;
+          modules_done: number;
+        };
+        Insert: {
+          id?: string;
+          course_id: string;
+          user_id: string;
+          modules_done?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["course_progress"]["Insert"]>;
+      };
+      sessions: {
+        Row: {
+          id: string;
+          title: string;
+          date: string;
+          time: string | null;
+          video_link: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          date: string;
+          time?: string | null;
+          video_link?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["sessions"]["Insert"]>;
+      };
+      banners: {
+        Row: {
+          id: string;
+          title: string;
+          event_date_label: string;
+          image_url: string | null;
+          color_theme: ColorTheme;
+          is_past: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          event_date_label?: string;
+          image_url?: string | null;
+          color_theme: ColorTheme;
+          is_past?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["banners"]["Insert"]>;
+      };
+      events: {
+        Row: {
+          id: string;
+          title: string;
+          date: string;
+          category: ColorTheme;
+          related_post_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          date: string;
+          category: ColorTheme;
+          related_post_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["events"]["Insert"]>;
+      };
+      tasks: {
+        Row: {
+          id: string;
+          title: string;
+          status: TaskStatus;
+          assignee_id: string | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          status?: TaskStatus;
+          assignee_id?: string | null;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["tasks"]["Insert"]>;
+      };
+      photos: {
+        Row: {
+          id: string;
+          image_url: string;
+          caption: string | null;
+          uploaded_by: string;
+          album: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          image_url: string;
+          caption?: string | null;
+          uploaded_by: string;
+          album?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["photos"]["Insert"]>;
+      };
+      photo_likes: {
+        Row: {
+          id: string;
+          photo_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          photo_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["photo_likes"]["Insert"]>;
+      };
+      photo_comments: {
+        Row: {
+          id: string;
+          photo_id: string;
+          user_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          photo_id: string;
+          user_id: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["photo_comments"]["Insert"]>;
+      };
+    };
+  };
+}
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Post = Database["public"]["Tables"]["posts"]["Row"];
+export type Course = Database["public"]["Tables"]["courses"]["Row"];
+export type CourseProgress = Database["public"]["Tables"]["course_progress"]["Row"];
+export type FellowshipSession = Database["public"]["Tables"]["sessions"]["Row"];
+export type Banner = Database["public"]["Tables"]["banners"]["Row"];
+export type CalendarEvent = Database["public"]["Tables"]["events"]["Row"];
+export type Task = Database["public"]["Tables"]["tasks"]["Row"];
+export type Photo = Database["public"]["Tables"]["photos"]["Row"];
+export type PhotoLike = Database["public"]["Tables"]["photo_likes"]["Row"];
+export type PhotoComment = Database["public"]["Tables"]["photo_comments"]["Row"];
