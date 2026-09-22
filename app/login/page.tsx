@@ -28,8 +28,7 @@ export default async function LoginPage({
             className="h-auto w-[190px]"
           />
           <h1 className="font-display -mt-2 text-[42px] font-bold tracking-wide text-white">
-            C<span className="text-accent-to">O</span>NN
-            <span className="text-accent-to">E</span>CT
+            CONN<span className="text-accent-to">E</span>CT
           </h1>
           <p className="mt-1 text-[13px] font-semibold tracking-[0.25em] text-white/85">
             EMMANUEL YOUTH
