@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -53,6 +54,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body suppressHydrationWarning>
+        <ServiceWorkerRegistration />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
