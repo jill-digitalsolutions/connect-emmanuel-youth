@@ -52,6 +52,13 @@
   --color-coral-bg: #3A1E1B;
   --color-plum-bg: #2A1F3B;
   --color-moss-bg: #163325;
+  /* Light-on-dark variants: the base -ink colors are dark text meant for
+     the light-mode pastel -bg pairs, so they read as near-invisible dark
+     text on these dark -bg pairs. */
+  --color-amber-ink: #F0B65C;
+  --color-coral-ink: #FF9B89;
+  --color-plum-ink: #D4B3EE;
+  --color-moss-ink: #7EE0A8;
 }
 
 * {
