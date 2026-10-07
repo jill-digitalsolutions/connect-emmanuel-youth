@@ -16,6 +16,7 @@ export default async function ProtectedLayout({
   const resolvedProfile = profile ?? {
     id: userId,
     name: "Member",
+    username: null,
     avatar_url: null,
     role: "member" as const,
     created_at: new Date().toISOString(),

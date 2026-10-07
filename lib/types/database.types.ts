@@ -16,12 +16,14 @@ export interface Database {
           id: string;
           name: string;
           avatar_url: string | null;
+          username: string | null;
           role: Role;
           created_at: string;
         };
         Insert: {
           id: string;
           name?: string;
+          username?: string | null;
           avatar_url?: string | null;
           role?: Role;
           created_at?: string;
@@ -29,6 +31,7 @@ export interface Database {
         Update: {
           id?: string;
           name?: string;
+          username?: string | null;
           avatar_url?: string | null;
           role?: Role;
           created_at?: string;
@@ -247,7 +250,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      login_email_for_username: {
+        Args: { p_username: string };
+        Returns: string | null;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

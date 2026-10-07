@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Mail, User } from "lucide-react";
+import { AtSign, Mail, User } from "lucide-react";
 import { LoginBackground } from "@/components/auth/LoginBackground";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
@@ -50,6 +50,23 @@ export default async function SignupPage({
               placeholder="Full name"
               required
               autoComplete="name"
+              className="w-full rounded-full border border-white/15 bg-white/10 py-3.5 pl-11 text-[15px] text-white placeholder:text-white/60 backdrop-blur-sm focus:border-white/40 focus:outline-none"
+            />
+          </div>
+
+          <div className="relative">
+            <AtSign className="pointer-events-none absolute top-1/2 left-4 h-4.5 w-4.5 -translate-y-1/2 text-white/70" />
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              required
+              minLength={3}
+              maxLength={30}
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               className="w-full rounded-full border border-white/15 bg-white/10 py-3.5 pl-11 text-[15px] text-white placeholder:text-white/60 backdrop-blur-sm focus:border-white/40 focus:outline-none"
             />
           </div>

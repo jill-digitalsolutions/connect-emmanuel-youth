@@ -60,7 +60,7 @@ export default async function LoginPage({
               name="email"
               placeholder="Email or Username"
               required
-              autoComplete="email"
+              autoComplete="username"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
