@@ -61,6 +61,9 @@ export default async function LoginPage({
               placeholder="Email or Username"
               required
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               className="w-full rounded-full border border-white/15 bg-white/10 py-3.5 pl-11 text-[15px] text-white placeholder:text-white/60 backdrop-blur-sm focus:border-white/40 focus:outline-none"
             />
           </div>
