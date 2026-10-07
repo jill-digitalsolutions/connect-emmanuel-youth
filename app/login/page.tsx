@@ -86,6 +86,13 @@ export default async function LoginPage({
 
           <OAuthButtons />
         </form>
+
+        <p className="mt-6 text-center text-[14px] text-white/75">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="font-bold text-accent-to hover:underline">
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );
