@@ -7,6 +7,10 @@ export type PostCategory = "training" | "fellowship" | "announcement" | "calenda
 export type CourseTrack = "Leadership" | "Bible Study" | "Media Team" | "Worship";
 export type TaskStatus = "todo" | "doing" | "done";
 export type ColorTheme = "amber" | "coral" | "plum" | "moss";
+export type ImageFit = "contain" | "cover";
+export type ImagePosition = "center" | "top" | "bottom" | "left" | "right";
+export type TextPosition = "top" | "center" | "bottom";
+export type TextAlign = "left" | "center" | "right";
 
 export interface Database {
   public: {
@@ -133,6 +137,15 @@ export interface Database {
           color_theme: ColorTheme;
           is_past: boolean;
           created_at: string;
+          image_fit?: ImageFit;
+          image_position?: ImagePosition;
+          text_position?: TextPosition;
+          text_align?: TextAlign;
+          event_date?: string | null;
+          event_end_date?: string | null;
+          image_x?: number;
+          image_y?: number;
+          image_zoom?: number;
         };
         Insert: {
           id?: string;
@@ -142,6 +155,15 @@ export interface Database {
           color_theme: ColorTheme;
           is_past?: boolean;
           created_at?: string;
+          image_fit?: ImageFit;
+          image_position?: ImagePosition;
+          text_position?: TextPosition;
+          text_align?: TextAlign;
+          event_date?: string | null;
+          event_end_date?: string | null;
+          image_x?: number;
+          image_y?: number;
+          image_zoom?: number;
         };
         Update: Partial<Database["public"]["Tables"]["banners"]["Insert"]>;
         Relationships: [];

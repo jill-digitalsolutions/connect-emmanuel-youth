@@ -61,3 +61,13 @@ export function getMonthGrid(cursor: Date) {
   }
   return cells;
 }
+
+export function formatDateRange(start: string, end?: string | null) {
+  if (!end || end === start) return fmtDateStr(start);
+  const a = new Date(`${start}T00:00:00`);
+  const b = new Date(`${end}T00:00:00`);
+  if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()) {
+    return `${MONTHS_SHORT[a.getMonth()]} ${a.getDate()}\u2013${b.getDate()}`;
+  }
+  return `${fmtDateStr(start)} \u2013 ${fmtDateStr(end)}`;
+}

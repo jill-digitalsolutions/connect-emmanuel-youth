@@ -35,7 +35,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex h-full w-60 flex-none flex-col gap-1 bg-ink px-3.5 py-5.5 text-[#E9E7F6]">
       <div className="flex items-center gap-2.5 px-2.5 pt-1.5 pb-5.5">
-        <Image src="/brand/connect-mark-v3.png" alt="" width={34} height={24} className="h-auto w-[34px]" />
+        <Image src="/brand/connect-mark-v4.png" alt="" width={34} height={24} className="h-auto w-[34px]" />
         <div>
           <div className="font-display text-[20px] font-semibold tracking-[0.2px] text-white">CONNECT</div>
           <div className="-mt-0.5 text-[11.5px] text-[#9C99BE]">Emmanuel Runners</div>

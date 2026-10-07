@@ -21,7 +21,7 @@ export default async function LoginPage({
       <div className="w-full max-w-[400px]">
         <div className="mb-2 flex flex-col items-center">
           <Image
-            src="/brand/connect-mark-v3.png"
+            src="/brand/connect-mark-v4.png"
             alt="CONNECT logo"
             width={220}
             height={155}
