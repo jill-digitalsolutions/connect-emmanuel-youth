@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AtSign, Mail, User } from "lucide-react";
+import { AtSign, User } from "lucide-react";
 import { LoginBackground } from "@/components/auth/LoginBackground";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
