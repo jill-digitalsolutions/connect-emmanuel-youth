@@ -41,6 +41,7 @@ export const NAV_ITEMS = [
   { href: "/calendar", label: "Calendar", icon: "Calendar" },
   { href: "/board", label: "Project Board", icon: "Kanban" },
   { href: "/messages", label: "Messages", icon: "MessageCircle" },
+  { href: "/members", label: "Members", icon: "Users" },
 ] as const;
 
 export const PAGE_META: Record<string, { title: string; subtitle: string }> = {
@@ -53,5 +54,6 @@ export const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   "/calendar": { title: "Calendar", subtitle: "Every activity, one view." },
   "/board": { title: "Project Board", subtitle: "Track who's doing what." },
   "/admin": { title: "Admin", subtitle: "Create accounts and manage who is an admin." },
+  "/members": { title: "Members", subtitle: "Everyone in CONNECT." },
   "/messages": { title: "Messages", subtitle: "Chat with the whole youth group, live." },
 };

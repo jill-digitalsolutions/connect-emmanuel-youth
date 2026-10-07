@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Home, Megaphone, GraduationCap, Video, Image as ImageIcon, Images,
-  Calendar, Kanban, MessageCircle, ShieldCheck,
+  Calendar, Kanban, MessageCircle, ShieldCheck, Users,
 } from "lucide-react";
 import clsx from "clsx";
 import { NAV_ITEMS } from "@/lib/utils/constants";
@@ -22,6 +22,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Kanban,
   MessageCircle,
   ShieldCheck,
+  Users,
 };
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {

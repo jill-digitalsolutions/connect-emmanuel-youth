@@ -310,6 +310,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      set_my_avatar: {
+        Args: { p_url: string };
+        Returns: undefined;
+      };
       login_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;

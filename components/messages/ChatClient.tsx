@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Send, SmilePlus, Trash2 } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "@/components/ui/Card";
@@ -20,6 +20,36 @@ const EMOJI: { key: ChatEmoji; char: string; label: string }[] = [
   { key: "laugh", char: "😂", label: "Haha" },
   { key: "sad", char: "😢", label: "Sad" },
 ];
+
+type Member = { id: string; name: string; username: string; avatar_url: string | null };
+
+// Turns "@maria hi" into pieces so known @usernames can be highlighted.
+function renderBody(body: string, known: Map<string, Member>, mine: boolean, myUsername: string | null) {
+  return body.split(/(@[a-z0-9._-]{3,30})/gi).map((part, i) => {
+    if (part.startsWith("@")) {
+      // Trailing punctuation ("@maria.") isn't part of the username.
+      const core = part.replace(/[._-]+$/, "");
+      const tail = part.slice(core.length);
+      if (known.has(core.slice(1).toLowerCase())) {
+        const toMe = myUsername && core.slice(1).toLowerCase() === myUsername.toLowerCase();
+        return (
+          <span key={i}>
+            <span
+              className={clsx(
+                "rounded px-1 font-bold",
+                mine ? "bg-white/25 text-white" : toMe ? "bg-amber/30 text-text" : "bg-accent-to/15 text-accent-to"
+              )}
+            >
+              {core}
+            </span>
+            {tail}
+          </span>
+        );
+      }
+    }
+    return part;
+  });
+}
 
 function clock(iso: string) {
   const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T"));
@@ -43,6 +73,50 @@ export function ChatClient({
   const [reactions, setReactions] = useState(initialReactions);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [mention, setMention] = useState<{ query: string; start: number } | null>(null);
+  const [mentionIdx, setMentionIdx] = useState(0);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const members = useMemo(
+    () =>
+      [...profilesById.entries()]
+        .filter(([, p]) => p.username)
+        .map(([id, p]) => ({ id, name: p.name, username: p.username as string, avatar_url: p.avatar_url })),
+    [profilesById]
+  );
+  const knownByUsername = useMemo(() => new Map(members.map((m) => [m.username.toLowerCase(), m])), [members]);
+  const suggestions = useMemo(() => {
+    if (!mention) return [];
+    const q = mention.query.toLowerCase();
+    return members
+      .filter((m) => m.id !== me.id && (m.username.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)))
+      .slice(0, 6);
+  }, [mention, members, me.id]);
+
+  function updateText(value: string, caret: number) {
+    setText(value);
+    // An "@word" right before the caret opens the tag picker.
+    const m = /(^|\s)@([a-z0-9._-]*)$/i.exec(value.slice(0, caret));
+    if (m) {
+      setMention({ query: m[2], start: caret - m[2].length - 1 });
+      setMentionIdx(0);
+    } else {
+      setMention(null);
+    }
+  }
+
+  function pickMention(member: Member) {
+    if (!mention) return;
+    const caret = inputRef.current?.selectionStart ?? text.length;
+    const next = `${text.slice(0, mention.start)}@${member.username} ${text.slice(caret)}`;
+    const pos = mention.start + member.username.length + 2;
+    setText(next);
+    setMention(null);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(pos, pos);
+    });
+  }
   const [sending, setSending] = useState(false);
 
   useRealtimeTable<ChatMessage>("chat_messages", (payload) => {
@@ -95,6 +169,7 @@ export function ChatClient({
       return;
     }
     setText("");
+    setMention(null);
     setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [data, ...prev]));
   }
 
@@ -139,7 +214,7 @@ export function ChatClient({
                       mine ? "rounded-br-md bg-gradient-to-r from-accent-from to-accent-to text-white" : "rounded-bl-md bg-page text-text"
                     )}
                   >
-                    {m.body}
+                    {renderBody(m.body, knownByUsername, mine, me.username)}
                   </div>
                   <div className={clsx("relative mt-1 flex flex-wrap items-center gap-1", mine && "justify-end")}>
                     {counts.map((c) => (
@@ -209,11 +284,51 @@ export function ChatClient({
           })}
         </div>
 
-        <form onSubmit={send} className="flex items-end gap-2 border-t border-line p-3">
+        <form onSubmit={send} className="relative flex items-end gap-2 border-t border-line p-3">
+          {mention && suggestions.length > 0 && (
+            <div className="absolute right-3 bottom-[62px] left-3 z-20 overflow-hidden rounded-xl border border-line bg-surface shadow-lg">
+              {suggestions.map((m, i) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pickMention(m);
+                  }}
+                  className={clsx(
+                    "flex w-full items-center gap-2.5 px-3 py-2 text-left",
+                    i === mentionIdx ? "bg-page" : "hover:bg-page"
+                  )}
+                >
+                  <Avatar name={m.name} avatarUrl={m.avatar_url} size={28} />
+                  <span className="min-w-0 truncate text-[13.5px] font-bold">{m.name}</span>
+                  <span className="truncate text-[12.5px] text-text-soft">@{m.username}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <textarea
+            ref={inputRef}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => updateText(e.target.value, e.target.selectionStart)}
             onKeyDown={(e) => {
+              if (mention && suggestions.length > 0) {
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const step = e.key === "ArrowDown" ? 1 : -1;
+                  setMentionIdx((i) => (i + step + suggestions.length) % suggestions.length);
+                  return;
+                }
+                if (e.key === "Enter" || e.key === "Tab") {
+                  e.preventDefault();
+                  pickMention(suggestions[mentionIdx] ?? suggestions[0]);
+                  return;
+                }
+                if (e.key === "Escape") {
+                  setMention(null);
+                  return;
+                }
+              }
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 e.currentTarget.form?.requestSubmit();
@@ -221,7 +336,7 @@ export function ChatClient({
             }}
             rows={1}
             maxLength={2000}
-            placeholder="Message everyone…"
+            placeholder="Message everyone… use @ to tag someone"
             className="max-h-28 min-h-[42px] flex-1 resize-none rounded-2xl border border-line bg-surface px-4 py-2.5 text-[14px] text-text focus:border-accent-to focus:outline-none"
           />
           <button
