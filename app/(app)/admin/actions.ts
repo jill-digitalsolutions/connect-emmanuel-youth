@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient as createAnonClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { usernameEmail } from "@/lib/utils/username-email";
 import { getRealProfile, getServerClient, VIEW_AS_COOKIE } from "@/lib/supabase/session";
 import type { Database } from "@/lib/types/database.types";
 
@@ -22,11 +23,11 @@ export async function createAccount(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim().toLowerCase();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase() || usernameEmail(username);
   const password = String(formData.get("password") ?? "");
   const makeAdmin = formData.get("admin") === "on";
 
-  if (!name || !username || !email || !password) back("error", "Fill in name, username, email and password.");
+  if (!name || !username || !password) back("error", "Fill in name, username and password.");
   if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
     back("error", "Username must be 3–30 characters: letters, numbers, dots, dashes or underscores.");
   }

@@ -61,8 +61,8 @@ export default async function AdminPage({
             spellCheck={false}
             placeholder="e.g. mariasantos"
           />
-          <FieldLabel>Email</FieldLabel>
-          <TextInput name="email" type="email" required autoCapitalize="none" placeholder="name@example.com" />
+          <FieldLabel>Email (optional)</FieldLabel>
+          <TextInput name="email" type="email" autoCapitalize="none" placeholder="Leave blank to use the username only" />
           <FieldLabel>Password</FieldLabel>
           <TextInput name="password" type="text" required minLength={6} autoComplete="off" placeholder="At least 6 characters" />
           <label className="mt-3.5 flex items-center gap-2 text-[13.5px] font-semibold">

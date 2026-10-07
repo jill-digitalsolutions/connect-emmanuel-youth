@@ -71,21 +71,6 @@ export default async function SignupPage({
             />
           </div>
 
-          <div className="relative">
-            <Mail className="pointer-events-none absolute top-1/2 left-4 h-4.5 w-4.5 -translate-y-1/2 text-white/70" />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              required
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              className="w-full rounded-full border border-white/15 bg-white/10 py-3.5 pl-11 text-[15px] text-white placeholder:text-white/60 backdrop-blur-sm focus:border-white/40 focus:outline-none"
-            />
-          </div>
-
           <PasswordField />
 
           <SubmitButton label="Create Account" pendingLabel="Creating account…" />
