@@ -42,6 +42,22 @@ export interface Database {
         };
         Relationships: [];
       };
+      chat_messages: {
+        Row: {
+          id: string;
+          sender_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["chat_messages"]["Insert"]>;
+        Relationships: [];
+      };
       posts: {
         Row: {
           id: string;
@@ -284,6 +300,7 @@ export interface Database {
 }
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ChatMessage = Database["public"]["Tables"]["chat_messages"]["Row"];
 export type Post = Database["public"]["Tables"]["posts"]["Row"];
 export type Course = Database["public"]["Tables"]["courses"]["Row"];
 export type CourseProgress = Database["public"]["Tables"]["course_progress"]["Row"];

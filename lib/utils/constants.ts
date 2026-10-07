@@ -53,5 +53,5 @@ export const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   "/calendar": { title: "Calendar", subtitle: "Every activity, one view." },
   "/board": { title: "Project Board", subtitle: "Track who's doing what." },
   "/admin": { title: "Admin", subtitle: "Create accounts and manage who is an admin." },
-  "/messages": { title: "Messages", subtitle: "Quick links to where the chat happens." },
+  "/messages": { title: "Messages", subtitle: "Chat with the whole youth group, live." },
 };
