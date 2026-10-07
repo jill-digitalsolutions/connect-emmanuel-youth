@@ -13,5 +13,8 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent("Sign-in failed. Please try again.")}`);
+  // Supabase confirms the email before redirecting here, so a failed code
+  // exchange (e.g. link opened on a different device than the signup) usually
+  // still means the account is confirmed.
+  return NextResponse.redirect(`${origin}/login?notice=confirmed`);
 }

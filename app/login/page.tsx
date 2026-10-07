@@ -42,6 +42,11 @@ export default async function LoginPage({
               Check your email to confirm your account, then log in.
             </p>
           )}
+          {notice === "confirmed" && (
+            <p className="rounded-xl bg-white/10 px-4 py-2 text-center text-[13px] text-white">
+              Email confirmed. Log in with your email and password.
+            </p>
+          )}
           {error && (
             <p className="rounded-xl bg-coral/20 px-4 py-2 text-center text-[13px] text-white">
               {error}
