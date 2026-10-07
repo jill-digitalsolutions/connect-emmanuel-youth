@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { mergeChange } from "@/lib/utils/realtime";
 import { uploadToBucket } from "@/lib/utils/image";
-import { formatDateRange, inferDatesFromLabel, todayIso } from "@/lib/utils/dates";
+import { datesInRange, formatDateRange, inferDatesFromLabel, todayIso } from "@/lib/utils/dates";
 import { useCurrentUser } from "@/lib/context/CurrentUserContext";
 import type { Banner, ColorTheme } from "@/lib/types/database.types";
 
@@ -39,6 +39,31 @@ function isPast(b: Banner, today: string) {
   const { start, end } = datesOf(b);
   const last = end ?? start;
   return Boolean(last && last < today);
+}
+
+type CalendarSpec = { title: string; color: ColorTheme; start: string | null; end: string | null };
+
+// Keep the Calendar in step with a poster's date(s): one event per day, same
+// title and color. Removes the poster's old entries first so edits never duplicate.
+async function syncCalendar(
+  supabase: ReturnType<typeof createClient>,
+  before: CalendarSpec | null,
+  after: CalendarSpec | null
+) {
+  for (const spec of [before, after]) {
+    if (!spec?.start) continue;
+    await supabase
+      .from("events")
+      .delete()
+      .eq("title", spec.title)
+      .eq("category", spec.color)
+      .in("date", datesInRange(spec.start, spec.end));
+  }
+  if (!after?.start) return null;
+  const { error } = await supabase.from("events").insert(
+    datesInRange(after.start, after.end).map((date) => ({ title: after.title, date, category: after.color }))
+  );
+  return error;
 }
 
 export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) {
@@ -104,7 +129,13 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
         ({ error } = await supabase.from("banners").insert(stripNewFields(row) as typeof row));
         if (!error) toast("Saved. Dates and layout options need the banner SQL update in Supabase.");
       } else {
-        toast("Poster added");
+        const calErr = await syncCalendar(supabase, null, {
+          title: row.title,
+          color,
+          start: startDate || null,
+          end: endDate || null,
+        });
+        toast(startDate ? (calErr ? "Poster added (couldn't add to Calendar)" : "Poster added to Banners and Calendar") : "Poster added");
       }
       if (error) throw error;
       setTitle("");
@@ -121,8 +152,16 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
 
   async function handleDelete(id: string) {
     const supabase = createClient();
+    const target = banners.find((b) => b.id === id);
     const { error } = await supabase.from("banners").delete().eq("id", id);
-    if (error) toast(error.message);
+    if (error) {
+      toast(error.message);
+      return;
+    }
+    if (target) {
+      const d = datesOf(target);
+      await syncCalendar(supabase, { title: target.title, color: target.color_theme, ...d }, null);
+    }
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -153,6 +192,14 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
       if (error) {
         toast(/column/i.test(error.message) ? "Run the banner SQL update in Supabase first." : error.message);
         return;
+      }
+      if (original) {
+        const d = datesOf(original);
+        await syncCalendar(
+          supabase,
+          { title: original.title, color: original.color_theme, ...d },
+          { title: update.title, color: update.color_theme, start: update.event_date, end: update.event_end_date }
+        );
       }
       // Tidy up the replaced file (best effort — failure here doesn't matter).
       const oldPath = newImageUrl && original?.image_url?.split("/storage/v1/object/public/banners/")[1];

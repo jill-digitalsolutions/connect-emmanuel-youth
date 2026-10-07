@@ -96,3 +96,15 @@ export function inferDatesFromLabel(label: string, now = new Date()) {
   }
   return { start, end };
 }
+
+// Every day from start to end inclusive (capped so a typo can't flood the calendar).
+export function datesInRange(start: string, end?: string | null, max = 31) {
+  const out: string[] = [];
+  const cursor = new Date(`${start}T00:00:00`);
+  const last = new Date(`${end && end >= start ? end : start}T00:00:00`);
+  while (cursor <= last && out.length < max) {
+    out.push(`${cursor.getFullYear()}-${pad(cursor.getMonth() + 1)}-${pad(cursor.getDate())}`);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return out;
+}
