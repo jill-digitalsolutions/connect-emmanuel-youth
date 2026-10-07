@@ -9,6 +9,7 @@ import { FieldLabel, TextInput, FormRow, Select } from "@/components/ui/FormFiel
 import { ImageInput } from "@/components/ui/ImageInput";
 import { Modal, ModalActions } from "@/components/ui/Modal";
 import { PosterCard } from "./PosterCard";
+import { PosterViewer } from "./PosterViewer";
 import { LayoutOptions, DEFAULT_LAYOUT, type BannerLayout } from "./LayoutOptions";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
@@ -43,6 +44,7 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Banner | null>(null);
+  const [viewing, setViewing] = useState<Banner | null>(null);
   const toast = useToast();
   const me = useCurrentUser();
   const isAdmin = me.role === "admin";
@@ -143,6 +145,7 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
     <PosterCard
       key={b.id}
       banner={b}
+      onView={() => setViewing(b)}
       onEdit={isAdmin ? () => setEditing(b) : undefined}
       onDelete={isAdmin ? () => handleDelete(b.id) : undefined}
     />
@@ -204,6 +207,8 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
       ) : (
         <div className="grid grid-cols-2 gap-3.5 tablet:grid-cols-3 desktop:grid-cols-4">{past.map(poster)}</div>
       )}
+
+      {viewing && <PosterViewer banner={viewing} onClose={() => setViewing(null)} />}
 
       <Modal open={Boolean(editing)} onClose={() => setEditing(null)}>
         {editing && (

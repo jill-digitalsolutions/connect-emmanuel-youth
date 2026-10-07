@@ -14,10 +14,12 @@ export function PosterCard({
   banner,
   onDelete,
   onEdit,
+  onView,
 }: {
   banner: Banner;
   onDelete?: () => void;
   onEdit?: () => void;
+  onView?: () => void;
 }) {
   const fit = banner.image_fit ?? "contain";
   const x = banner.image_x ?? 50;
@@ -28,7 +30,24 @@ export function PosterCard({
 
   return (
     <div
-      className="relative aspect-3/4 overflow-hidden rounded-xl border border-line"
+      role={onView ? "button" : undefined}
+      tabIndex={onView ? 0 : undefined}
+      aria-label={onView ? `View ${banner.title} full size` : undefined}
+      onClick={onView}
+      onKeyDown={
+        onView
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onView();
+              }
+            }
+          : undefined
+      }
+      className={clsx(
+        "relative aspect-3/4 overflow-hidden rounded-xl border border-line",
+        onView && "cursor-zoom-in transition hover:shadow-lg focus-visible:ring-2 focus-visible:ring-accent-to"
+      )}
       style={banner.image_url ? undefined : { background: POSTER_GRADIENTS[banner.color_theme] }}
     >
       {banner.image_url && (
@@ -69,7 +88,10 @@ export function PosterCard({
           {onEdit && (
             <button
               type="button"
-              onClick={onEdit}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
               className="rounded-full bg-black/55 px-2 py-1 text-[10px] font-extrabold text-white hover:bg-black/75"
             >
               Edit
@@ -78,7 +100,10 @@ export function PosterCard({
           {onDelete && (
             <button
               type="button"
-              onClick={onDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
               className="rounded-full bg-black/55 px-2 py-1 text-[10px] font-extrabold text-white hover:bg-black/75"
             >
               Delete
