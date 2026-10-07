@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { getUserId, getProfile } from "@/lib/supabase/session";
+import { getUserId, getProfile, isPreviewingAsMember } from "@/lib/supabase/session";
+import { viewAsAdmin } from "./admin/actions";
 import { CurrentUserProvider } from "@/lib/context/CurrentUserContext";
 import { AppShell } from "@/components/layout/AppShell";
 
@@ -11,7 +12,7 @@ export default async function ProtectedLayout({
   const userId = await getUserId();
   if (!userId) redirect("/login");
 
-  const profile = await getProfile();
+  const [profile, previewing] = await Promise.all([getProfile(), isPreviewingAsMember()]);
 
   const resolvedProfile = profile ?? {
     id: userId,
@@ -24,7 +25,20 @@ export default async function ProtectedLayout({
 
   return (
     <CurrentUserProvider profile={resolvedProfile}>
-      <AppShell>{children}</AppShell>
+      <AppShell>
+        {previewing && (
+          <form
+            action={viewAsAdmin}
+            className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-plum-bg px-4 py-3 text-[13.5px] font-semibold text-plum-ink"
+          >
+            <span>You&apos;re viewing CONNECT as a member.</span>
+            <button type="submit" className="rounded-lg bg-plum px-3 py-1.5 text-xs font-bold text-white">
+              Switch back to admin
+            </button>
+          </form>
+        )}
+        {children}
+      </AppShell>
     </CurrentUserProvider>
   );
 }

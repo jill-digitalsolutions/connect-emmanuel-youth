@@ -5,10 +5,11 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Home, Megaphone, GraduationCap, Video, Image as ImageIcon, Images,
-  Calendar, Kanban, MessageCircle,
+  Calendar, Kanban, MessageCircle, ShieldCheck,
 } from "lucide-react";
 import clsx from "clsx";
 import { NAV_ITEMS } from "@/lib/utils/constants";
+import { useCurrentUser } from "@/lib/context/CurrentUserContext";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Home,
@@ -20,10 +21,16 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Calendar,
   Kanban,
   MessageCircle,
+  ShieldCheck,
 };
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const me = useCurrentUser();
+  const items =
+    me.role === "admin"
+      ? [...NAV_ITEMS, { href: "/admin", label: "Admin", icon: "ShieldCheck" } as const]
+      : NAV_ITEMS;
 
   return (
     <aside className="flex h-full w-60 flex-none flex-col gap-1 bg-ink px-3.5 py-5.5 text-[#E9E7F6]">
@@ -36,7 +43,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = ICONS[item.icon];
           const active = pathname === item.href;
           return (
