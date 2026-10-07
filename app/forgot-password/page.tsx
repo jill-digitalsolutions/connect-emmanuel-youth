@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[400px]">
         <div className="mb-6 flex flex-col items-center">
           <Image
-            src="/brand/connect-mark.png"
+            src="/brand/connect-mark-v2.png"
             alt="CONNECT logo"
             width={220}
             height={155}
