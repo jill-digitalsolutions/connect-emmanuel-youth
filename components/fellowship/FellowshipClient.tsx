@@ -18,7 +18,6 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
   const [sessions, setSessions] = useState(initialSessions);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [link, setLink] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
@@ -31,6 +30,10 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    // The time field is left uncontrolled: browsers report a half-typed time as
+    // "" and a controlled input would wipe it, flashing "Invalid value".
+    const time = String(new FormData(form).get("time") ?? "");
     if (!title.trim() || !date) {
       toast("Add a title and date");
       return;
@@ -50,7 +53,7 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
     }
     setTitle("");
     setDate("");
-    setTime("");
+    form.reset();
     setLink("");
     toast("Fellowship scheduled");
   }
@@ -81,7 +84,7 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
               </div>
               <div>
                 <FieldLabel>Time</FieldLabel>
-                <TextInput type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                <TextInput type="time" name="time" />
               </div>
             </FormRow>
             <FieldLabel>Video link (Zoom, Meet, etc.)</FieldLabel>
