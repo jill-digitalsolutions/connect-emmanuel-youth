@@ -40,12 +40,12 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-[400px]">
         <div className="mb-6 flex flex-col items-center">
           <Image
-            src="/brand/connect-mark-v4.png"
+            src="/brand/runners-mark.png"
             alt="CONNECT logo"
             width={220}
             height={155}
             priority
-            className="h-auto w-[120px]"
+            className="h-auto w-[130px] drop-shadow-[0_0_14px_rgba(255,255,255,0.3)]"
           />
           <h1 className="font-display -mt-1 text-[28px] font-bold text-white">Set a new password</h1>
         </div>

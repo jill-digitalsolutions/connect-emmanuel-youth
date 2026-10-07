@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { mergeChange } from "@/lib/utils/realtime";
 import { uploadToBucket } from "@/lib/utils/image";
-import { formatDateRange, todayIso } from "@/lib/utils/dates";
+import { formatDateRange, inferDatesFromLabel, todayIso } from "@/lib/utils/dates";
 import { useCurrentUser } from "@/lib/context/CurrentUserContext";
 import type { Banner, ColorTheme } from "@/lib/types/database.types";
 
@@ -28,9 +28,16 @@ function stripNewFields<T extends Record<string, unknown>>(row: T) {
   return copy;
 }
 
+// A poster's real dates, falling back to the date written in its label.
+function datesOf(b: Banner) {
+  if (b.event_date) return { start: b.event_date, end: b.event_end_date ?? null };
+  return inferDatesFromLabel(b.event_date_label);
+}
+
 function isPast(b: Banner, today: string) {
   if (b.is_past) return true;
-  const last = b.event_end_date ?? b.event_date;
+  const { start, end } = datesOf(b);
+  const last = end ?? start;
   return Boolean(last && last < today);
 }
 
@@ -130,11 +137,12 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
 
   const { upcoming, past } = useMemo(() => {
     const today = todayIso();
+    const startOf = (b: Banner) => datesOf(b).start;
     const byDateAsc = (a: Banner, b: Banner) =>
-      (a.event_date ?? "9999-12-31").localeCompare(b.event_date ?? "9999-12-31") ||
+      (startOf(a) ?? "9999-12-31").localeCompare(startOf(b) ?? "9999-12-31") ||
       b.created_at.localeCompare(a.created_at);
     const byDateDesc = (a: Banner, b: Banner) =>
-      (b.event_date ?? "").localeCompare(a.event_date ?? "") || b.created_at.localeCompare(a.created_at);
+      (startOf(b) ?? "").localeCompare(startOf(a) ?? "") || b.created_at.localeCompare(a.created_at);
     return {
       upcoming: banners.filter((b) => !isPast(b, today)).sort(byDateAsc),
       past: banners.filter((b) => isPast(b, today)).sort(byDateDesc),
@@ -146,7 +154,14 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
       key={b.id}
       banner={b}
       onView={() => setViewing(b)}
-      onEdit={isAdmin ? () => setEditing(b) : undefined}
+      onEdit={
+        isAdmin
+          ? () => {
+              const d = datesOf(b);
+              setEditing({ ...b, event_date: d.start, event_end_date: d.end });
+            }
+          : undefined
+      }
       onDelete={isAdmin ? () => handleDelete(b.id) : undefined}
     />
   );

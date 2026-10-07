@@ -20,12 +20,12 @@ export default async function SignupPage({
       <div className="w-full max-w-[400px]">
         <div className="mb-2 flex flex-col items-center">
           <Image
-            src="/brand/connect-mark-v4.png"
+            src="/brand/runners-mark.png"
             alt="CONNECT logo"
             width={220}
             height={155}
             priority
-            className="h-auto w-[120px]"
+            className="h-auto w-[130px] drop-shadow-[0_0_14px_rgba(255,255,255,0.3)]"
           />
           <h1 className="font-display -mt-1 text-[32px] font-bold tracking-wide text-white">
             Create your account

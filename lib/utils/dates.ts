@@ -71,3 +71,28 @@ export function formatDateRange(start: string, end?: string | null) {
   }
   return `${fmtDateStr(start)} \u2013 ${fmtDateStr(end)}`;
 }
+
+const MONTH_INDEX: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+// Older posters only have free text like "Sept 27" or "Oct 10–12". Read a real
+// date out of that so they can be sorted and archived like newer ones. Text
+// without a recognizable month and day (e.g. "TBA") yields no date.
+export function inferDatesFromLabel(label: string, now = new Date()) {
+  const m = label.match(/([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:\s*[\u2013\u2014-]\s*(?:([A-Za-z]{3,9})\.?\s+)?(\d{1,2}))?/);
+  if (!m) return { start: null as string | null, end: null as string | null };
+  const month = MONTH_INDEX[m[1].slice(0, 3).toLowerCase()];
+  if (month === undefined) return { start: null, end: null };
+  const year = now.getFullYear();
+  const start = `${year}-${pad(month + 1)}-${pad(Number(m[2]))}`;
+  let end: string | null = null;
+  if (m[4]) {
+    const endMonth = m[3] ? MONTH_INDEX[m[3].slice(0, 3).toLowerCase()] ?? month : month;
+    const endYear = endMonth < month ? year + 1 : year;
+    end = `${endYear}-${pad(endMonth + 1)}-${pad(Number(m[4]))}`;
+  }
+  return { start, end };
+}
