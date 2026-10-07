@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHead } from "@/components/ui/SectionHead";
@@ -52,6 +52,24 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Banner | null>(null);
   const [viewing, setViewing] = useState<Banner | null>(null);
+  const [newFile, setNewFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!newFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(newFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [newFile]);
+
+  function closeEditor() {
+    setEditing(null);
+    setNewFile(null);
+  }
   const toast = useToast();
   const me = useCurrentUser();
   const isAdmin = me.role === "admin";
@@ -110,29 +128,42 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
   async function handleSaveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing) return;
-    const supabase = createClient();
-    const update = {
-      title: editing.title.trim() || editing.title,
-      color_theme: editing.color_theme,
-      event_date: editing.event_date || null,
-      event_end_date: editing.event_end_date || null,
-      event_date_label: editing.event_date
-        ? formatDateRange(editing.event_date, editing.event_end_date)
-        : editing.event_date_label,
-      image_fit: editing.image_fit ?? "contain",
-      image_x: editing.image_x ?? 50,
-      image_y: editing.image_y ?? 50,
-      image_zoom: editing.image_zoom ?? 100,
-      text_position: editing.text_position ?? "bottom",
-      text_align: editing.text_align ?? "left",
-    };
-    const { error } = await supabase.from("banners").update(update).eq("id", editing.id);
-    if (error) {
-      toast(/column/i.test(error.message) ? "Run the banner SQL update in Supabase first." : error.message);
-      return;
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const original = banners.find((b) => b.id === editing.id);
+      const newImageUrl = newFile ? await uploadToBucket("banners", newFile, "banners") : null;
+      const update = {
+        title: editing.title.trim() || editing.title,
+        color_theme: editing.color_theme,
+        event_date: editing.event_date || null,
+        event_end_date: editing.event_end_date || null,
+        event_date_label: editing.event_date
+          ? formatDateRange(editing.event_date, editing.event_end_date)
+          : editing.event_date_label,
+        image_fit: editing.image_fit ?? "contain",
+        image_x: editing.image_x ?? 50,
+        image_y: editing.image_y ?? 50,
+        image_zoom: editing.image_zoom ?? 100,
+        text_position: editing.text_position ?? "bottom",
+        text_align: editing.text_align ?? "left",
+        ...(newImageUrl ? { image_url: newImageUrl } : {}),
+      };
+      const { error } = await supabase.from("banners").update(update).eq("id", editing.id);
+      if (error) {
+        toast(/column/i.test(error.message) ? "Run the banner SQL update in Supabase first." : error.message);
+        return;
+      }
+      // Tidy up the replaced file (best effort — failure here doesn't matter).
+      const oldPath = newImageUrl && original?.image_url?.split("/storage/v1/object/public/banners/")[1];
+      if (oldPath) await supabase.storage.from("banners").remove([decodeURIComponent(oldPath)]);
+      closeEditor();
+      toast(newImageUrl ? "Poster image replaced" : "Poster updated");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Could not save the poster");
+    } finally {
+      setSaving(false);
     }
-    setEditing(null);
-    toast("Poster updated");
   }
 
   const { upcoming, past } = useMemo(() => {
@@ -225,10 +256,15 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
 
       {viewing && <PosterViewer banner={viewing} onClose={() => setViewing(null)} />}
 
-      <Modal open={Boolean(editing)} onClose={() => setEditing(null)}>
+      <Modal open={Boolean(editing)} onClose={closeEditor}>
         {editing && (
           <form onSubmit={handleSaveEdit}>
             <h3 className="m-0 mb-1 text-[17px] font-semibold">Edit poster</h3>
+            <FieldLabel>Replace the poster image</FieldLabel>
+            <ImageInput file={newFile} onChange={setNewFile} label="Choose a corrected poster" />
+            <p className="mt-1 mb-0 text-xs text-text-soft">
+              Spotted a typo? Upload the fixed poster here — it replaces the old image and keeps the title, date and layout.
+            </p>
             <FieldLabel>Title</FieldLabel>
             <TextInput value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
             <FormRow>
@@ -290,14 +326,14 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
                 el.addEventListener("pointerup", up);
               }}
             >
-              <PosterCard banner={editing} />
+              <PosterCard banner={previewUrl ? { ...editing, image_url: previewUrl } : editing} />
             </div>
             <ModalActions>
-              <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+              <Button type="button" variant="ghost" onClick={closeEditor}>
                 Cancel
               </Button>
-              <Button type="submit" variant="plum">
-                Save
+              <Button type="submit" variant="plum" disabled={saving}>
+                {saving ? "Saving…" : "Save"}
               </Button>
             </ModalActions>
           </form>
