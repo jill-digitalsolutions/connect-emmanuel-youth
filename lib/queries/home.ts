@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { getServerClient } from "@/lib/supabase/session";
 import { todayIso, addDaysIso } from "@/lib/utils/dates";
 import type { Post, CalendarEvent, FellowshipSession } from "@/lib/types/database.types";
 
@@ -14,7 +14,7 @@ export interface HomeData {
 }
 
 export async function getHomeData(userId: string): Promise<HomeData> {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
   const today = todayIso();
   const monthStart = `${today.slice(0, 7)}-01`;
   const weekEnd = addDaysIso(7);

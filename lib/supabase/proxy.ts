@@ -21,9 +21,10 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refreshes the session token if it's expired. Do not add authorization
-  // decisions here — those belong close to the data, per Next.js guidance.
-  await supabase.auth.getUser();
+  // Refreshes the session token if expired (getClaims verifies the JWT
+  // locally when possible instead of a network round trip). No authorization
+  // decisions here — those belong close to the data.
+  await supabase.auth.getClaims();
 
   return response;
 }

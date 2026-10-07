@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { getServerClient } from "@/lib/supabase/session";
 import type { Post } from "@/lib/types/database.types";
 
 export interface PostWithAuthor extends Post {
@@ -7,7 +7,7 @@ export interface PostWithAuthor extends Post {
 }
 
 export async function getPosts(): Promise<PostWithAuthor[]> {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
   const { data } = await supabase
     .from("posts")
     .select("*, author:profiles!posts_author_id_fkey(name, avatar_url)")

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getUserId, getProfile } from "@/lib/supabase/session";
 import { getHomeData } from "@/lib/queries/home";
 import { HeroCard } from "@/components/home/HeroCard";
 import { Card } from "@/components/ui/Card";
@@ -7,17 +7,12 @@ import { Tag } from "@/components/ui/Tag";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fmtDateStr, timeAgo } from "@/lib/utils/dates";
-import { POST_CATEGORY_COLOR } from "@/lib/utils/constants";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  const userId = await getUserId();
+  if (!userId) return null;
 
-  const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).single();
-  const data = await getHomeData(user.id);
+  const [profile, data] = await Promise.all([getProfile(), getHomeData(userId)]);
 
   const stats = [
     { label: "Announcements this month", value: data.postsThisMonth },
@@ -39,7 +34,7 @@ export default async function HomePage() {
                 <h4 className="m-0 mb-1 text-[15px] font-bold">{data.nextSession.title}</h4>
                 <div className="text-[12.5px] text-text-soft">
                   {fmtDateStr(data.nextSession.date)}
-                  {data.nextSession.time ? ` · ${data.nextSession.time}` : ""}
+                  {data.nextSession.time ? ` · ${data.nextSession.time.slice(0, 5)}` : ""}
                 </div>
               </>
             ) : (

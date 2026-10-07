@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail, User } from "lucide-react";
 import { LoginBackground } from "@/components/auth/LoginBackground";
+import { SubmitButton } from "@/components/auth/SubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { signup } from "./actions";
 
@@ -67,12 +68,7 @@ export default async function SignupPage({
 
           <PasswordField />
 
-          <button
-            type="submit"
-            className="mt-1 flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent-from to-accent-to py-3.5 text-[15px] font-bold text-white shadow-lg shadow-accent-from/30 transition hover:brightness-105"
-          >
-            Create Account <span aria-hidden>→</span>
-          </button>
+          <SubmitButton label="Create Account" pendingLabel="Creating account…" />
 
           <p className="mt-2 text-center text-[13px] text-white/70">
             Already have an account?{" "}

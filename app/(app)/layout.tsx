@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getUserId, getProfile } from "@/lib/supabase/session";
 import { CurrentUserProvider } from "@/lib/context/CurrentUserContext";
 import { AppShell } from "@/components/layout/AppShell";
 
@@ -8,22 +8,14 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getUserId();
+  if (!userId) redirect("/login");
 
-  if (!user) redirect("/login");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const profile = await getProfile();
 
   const resolvedProfile = profile ?? {
-    id: user.id,
-    name: user.email?.split("@")[0] ?? "Member",
+    id: userId,
+    name: "Member",
     avatar_url: null,
     role: "member" as const,
     created_at: new Date().toISOString(),

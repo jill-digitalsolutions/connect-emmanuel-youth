@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { LoginBackground } from "@/components/auth/LoginBackground";
+import { SubmitButton } from "@/components/auth/SubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
 import { login } from "./actions";
@@ -67,12 +68,7 @@ export default async function LoginPage({
             </Link>
           </div>
 
-          <button
-            type="submit"
-            className="mt-1 flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent-from to-accent-to py-3.5 text-[15px] font-bold text-white shadow-lg shadow-accent-from/30 transition hover:brightness-105"
-          >
-            Log In <span aria-hidden>→</span>
-          </button>
+          <SubmitButton label="Log In" pendingLabel="Logging in…" />
 
           <div className="my-2 flex items-center gap-3 text-[11px] font-bold tracking-[0.15em] text-white/60">
             <span className="h-px flex-1 bg-white/20" />

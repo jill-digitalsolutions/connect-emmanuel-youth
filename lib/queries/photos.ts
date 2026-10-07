@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { getServerClient } from "@/lib/supabase/session";
 import type { Photo } from "@/lib/types/database.types";
 
 export interface PhotoWithUploader extends Photo {
@@ -13,7 +13,7 @@ export interface GalleryData {
 }
 
 export async function getGalleryData(): Promise<GalleryData> {
-  const supabase = await createClient();
+  const supabase = await getServerClient();
   const [photosRes, likesRes, commentsRes] = await Promise.all([
     supabase
       .from("photos")
