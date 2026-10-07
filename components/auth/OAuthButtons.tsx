@@ -1,30 +1,43 @@
 "use client";
 
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Provider = "google" | "apple" | "facebook";
 
-async function signInWith(provider: Provider) {
-  const supabase = createClient();
-  await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: `${window.location.origin}/auth/callback` },
-  });
+const PROVIDER_NAMES: Record<Provider, string> = {
+  google: "Google",
+  apple: "Apple",
+  facebook: "Facebook",
+};
+
+// Providers are enabled per Supabase project. Check first so a provider that
+// isn't set up yet shows a message instead of a raw JSON error page.
+async function isProviderEnabled(provider: Provider) {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+    });
+    const settings = await res.json();
+    return Boolean(settings?.external?.[provider]);
+  } catch {
+    return true;
+  }
 }
 
 function CircleButton({
-  provider,
   label,
+  onClick,
   children,
 }: {
-  provider: Provider;
   label: string;
+  onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      onClick={() => signInWith(provider)}
+      onClick={onClick}
       aria-label={label}
       title={label}
       className="flex h-13 w-13 items-center justify-center rounded-full border border-white/15 bg-white/10 backdrop-blur-sm transition hover:bg-white/20"
@@ -81,19 +94,41 @@ function FacebookIcon() {
 }
 
 export function OAuthButtons() {
+  const [message, setMessage] = useState("");
+
+  async function signInWith(provider: Provider) {
+    setMessage("");
+    if (!(await isProviderEnabled(provider))) {
+      setMessage(`${PROVIDER_NAMES[provider]} sign-in isn't available yet. Please use your email and password.`);
+      return;
+    }
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+  }
+
   return (
-    <div className="flex justify-center gap-4">
-      <CircleButton provider="google" label="Continue with Google">
-        <GoogleIcon />
-      </CircleButton>
-      <CircleButton provider="apple" label="Continue with Apple">
-        <span className="text-white">
-          <AppleIcon />
-        </span>
-      </CircleButton>
-      <CircleButton provider="facebook" label="Continue with Facebook">
-        <FacebookIcon />
-      </CircleButton>
+    <div>
+      <div className="flex justify-center gap-4">
+        <CircleButton label="Continue with Google" onClick={() => signInWith("google")}>
+          <GoogleIcon />
+        </CircleButton>
+        <CircleButton label="Continue with Apple" onClick={() => signInWith("apple")}>
+          <span className="text-white">
+            <AppleIcon />
+          </span>
+        </CircleButton>
+        <CircleButton label="Continue with Facebook" onClick={() => signInWith("facebook")}>
+          <FacebookIcon />
+        </CircleButton>
+      </div>
+      {message && (
+        <p role="status" className="mt-4 text-center text-[13px] text-white/80">
+          {message}
+        </p>
+      )}
     </div>
   );
 }
