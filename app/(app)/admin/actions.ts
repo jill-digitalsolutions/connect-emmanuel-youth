@@ -58,6 +58,9 @@ export async function createAccount(formData: FormData) {
     note += " Email confirmation is on in Supabase, so they must confirm first (or turn off “Confirm email” in Supabase).";
   }
 
+  // Accounts an admin creates are approved right away.
+  await supabase.from("profiles").update({ approved: true }).eq("id", data.user.id);
+
   if (makeAdmin) {
     const { data: updated } = await supabase
       .from("profiles")
@@ -92,6 +95,21 @@ export async function setRole(formData: FormData) {
 
   revalidatePath("/admin");
   back("notice", role === "admin" ? "Made admin." : "Removed admin.");
+}
+
+export async function approveMember(formData: FormData) {
+  await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+  const supabase = await getServerClient();
+  const { data: updated, error } = await supabase
+    .from("profiles")
+    .update({ approved: true })
+    .eq("id", userId)
+    .select("id");
+  if (error) back("error", error.message);
+  if (!updated?.length) back("error", "Could not approve. Run the member-approval SQL (0012) in Supabase first.");
+  revalidatePath("/admin");
+  back("notice", "Approved. They can now log in.");
 }
 
 export async function viewAsMember() {

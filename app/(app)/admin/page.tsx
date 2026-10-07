@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { FieldLabel, TextInput } from "@/components/ui/FormField";
 import { Avatar } from "@/components/ui/Avatar";
-import { createAccount, setRole, viewAsMember } from "./actions";
+import { approveMember, createAccount, setRole, viewAsMember } from "./actions";
 
 export default async function AdminPage({
   searchParams,
@@ -16,7 +16,9 @@ export default async function AdminPage({
   if (!me || me.role !== "admin") redirect("/home");
 
   const { notice, error } = await searchParams;
-  const members = (await getAllProfiles()).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const everyone = (await getAllProfiles()).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const pending = everyone.filter((m) => m.approved === false);
+  const members = everyone.filter((m) => m.approved !== false);
 
   return (
     <div>
@@ -25,6 +27,35 @@ export default async function AdminPage({
       )}
       {error && (
         <p className="mb-4 rounded-xl bg-coral-bg px-4 py-3 text-[13.5px] font-semibold text-coral-ink">{error}</p>
+      )}
+
+      {pending.length > 0 && (
+        <Card className="mb-4 border-coral">
+          <h3 className="m-0 mb-1 text-[17px] font-semibold">Waiting for approval ({pending.length})</h3>
+          <p className="m-0 mb-3 text-[13px] text-text-soft">
+            These people signed up and can&apos;t enter CONNECT until you approve them. Only approve people you know.
+          </p>
+          <div className="divide-y divide-line">
+            {pending.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <Avatar name={m.name} avatarUrl={m.avatar_url} size={36} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14px] font-bold">{m.name}</div>
+                  <div className="text-xs text-text-soft">{m.username ? `@${m.username}` : "no username"}</div>
+                </div>
+                <form action={approveMember}>
+                  <input type="hidden" name="userId" value={m.id} />
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-gradient-to-r from-accent-from to-accent-to px-3 py-1.5 text-xs font-bold text-white"
+                  >
+                    Approve
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
 
       <Card className="mb-4">

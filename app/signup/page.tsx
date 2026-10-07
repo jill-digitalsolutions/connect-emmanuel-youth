@@ -73,6 +73,10 @@ export default async function SignupPage({
 
           <PasswordField />
 
+          <p className="text-center text-[12.5px] text-white/65">
+            An admin will approve your account before you can enter.
+          </p>
+
           <SubmitButton label="Create Account" pendingLabel="Creating account…" />
 
           <p className="mt-2 text-center text-[13px] text-white/70">

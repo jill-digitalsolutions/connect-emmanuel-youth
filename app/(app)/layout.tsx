@@ -3,6 +3,7 @@ import { getUserId, getProfile, isPreviewingAsMember } from "@/lib/supabase/sess
 import { viewAsAdmin } from "./admin/actions";
 import { CurrentUserProvider } from "@/lib/context/CurrentUserContext";
 import { AppShell } from "@/components/layout/AppShell";
+import { PendingApproval } from "@/components/auth/PendingApproval";
 
 export default async function ProtectedLayout({
   children,
@@ -14,12 +15,17 @@ export default async function ProtectedLayout({
 
   const [profile, previewing] = await Promise.all([getProfile(), isPreviewingAsMember()]);
 
+  // Only an explicit `false` blocks access, so the app keeps working until the
+  // approval SQL (migration 0012) has been run.
+  if (profile?.approved === false) return <PendingApproval name={profile.name} />;
+
   const resolvedProfile = profile ?? {
     id: userId,
     name: "Member",
     username: null,
     avatar_url: null,
     role: "member" as const,
+    approved: true,
     created_at: new Date().toISOString(),
   };
 

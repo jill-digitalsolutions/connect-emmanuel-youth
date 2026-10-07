@@ -22,6 +22,7 @@ export interface Database {
           avatar_url: string | null;
           username: string | null;
           role: Role;
+          approved?: boolean;
           created_at: string;
         };
         Insert: {
@@ -30,6 +31,7 @@ export interface Database {
           username?: string | null;
           avatar_url?: string | null;
           role?: Role;
+          approved?: boolean;
           created_at?: string;
         };
         Update: {
@@ -38,6 +40,7 @@ export interface Database {
           username?: string | null;
           avatar_url?: string | null;
           role?: Role;
+          approved?: boolean;
           created_at?: string;
         };
         Relationships: [];
