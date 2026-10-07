@@ -9,8 +9,8 @@ import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { mergeChange } from "@/lib/utils/realtime";
-import { getMonthGrid, monthLabel, todayIso, DOW } from "@/lib/utils/dates";
-import type { CalendarEvent, ColorTheme } from "@/lib/types/database.types";
+import { datesInRange, getMonthGrid, inferDatesFromLabel, monthLabel, todayIso, DOW } from "@/lib/utils/dates";
+import type { Banner, CalendarEvent, ColorTheme, FellowshipSession } from "@/lib/types/database.types";
 
 const CATEGORY_DOT: Record<ColorTheme, string> = {
   amber: "bg-amber-bg text-amber-ink",
@@ -19,8 +19,20 @@ const CATEGORY_DOT: Record<ColorTheme, string> = {
   moss: "bg-moss-bg text-moss-ink",
 };
 
-export function CalendarClient({ initialEvents }: { initialEvents: CalendarEvent[] }) {
+type DayItem = { id: string; title: string; category: ColorTheme };
+
+export function CalendarClient({
+  initialEvents,
+  initialBanners,
+  initialSessions,
+}: {
+  initialEvents: CalendarEvent[];
+  initialBanners: Banner[];
+  initialSessions: FellowshipSession[];
+}) {
   const [events, setEvents] = useState(initialEvents);
+  const [banners, setBanners] = useState(initialBanners);
+  const [sessions, setSessions] = useState(initialSessions);
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -36,16 +48,41 @@ export function CalendarClient({ initialEvents }: { initialEvents: CalendarEvent
     setEvents((prev) => mergeChange(prev, payload));
   });
 
+  useRealtimeTable<Banner>("banners", (payload) => {
+    setBanners((prev) => mergeChange(prev, payload));
+  });
+  useRealtimeTable<FellowshipSession>("sessions", (payload) => {
+    setSessions((prev) => mergeChange(prev, payload));
+  });
+
   const cells = useMemo(() => getMonthGrid(cursor), [cursor]);
+  // Everything dated in the app shows here: calendar events, poster dates and
+  // fellowship sessions. Poster/session entries are derived, so they never go
+  // stale; an event with the same title and day takes precedence (no doubles).
   const eventsByDate = useMemo(() => {
-    const map = new Map<string, CalendarEvent[]>();
-    for (const e of events) {
-      const list = map.get(e.date) ?? [];
-      list.push(e);
-      map.set(e.date, list);
+    const map = new Map<string, DayItem[]>();
+    const seen = new Set<string>();
+    const add = (date: string, item: DayItem) => {
+      const key = `${date}|${item.title.trim().toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      map.set(date, [...(map.get(date) ?? []), item]);
+    };
+    for (const e of events) add(e.date, e);
+    for (const b of banners) {
+      const d = b.event_date
+        ? { start: b.event_date, end: b.event_end_date }
+        : inferDatesFromLabel(b.event_date_label);
+      if (!d.start) continue;
+      for (const date of datesInRange(d.start, d.end)) {
+        add(date, { id: `banner-${b.id}-${date}`, title: b.title, category: b.color_theme });
+      }
+    }
+    for (const s of sessions) {
+      add(s.date, { id: `session-${s.id}`, title: s.title, category: "coral" });
     }
     return map;
-  }, [events]);
+  }, [events, banners, sessions]);
   const today = todayIso();
 
   async function handleSubmit(e: React.FormEvent) {
