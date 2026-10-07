@@ -38,7 +38,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Image src="/brand/connect-mark.png" alt="" width={34} height={24} className="h-auto w-[34px]" />
         <div>
           <div className="font-display text-[20px] font-semibold tracking-[0.2px] text-white">CONNECT</div>
-          <div className="-mt-0.5 text-[11.5px] text-[#9C99BE]">Emmanuel Youth</div>
+          <div className="-mt-0.5 text-[11.5px] text-[#9C99BE]">Emmanuel Runners</div>
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="mt-auto px-3 pt-3 pb-1 text-xs leading-relaxed text-[#706C93]">
-        CONNECT — Emmanuel Youth
+        CONNECT — Emmanuel Runners
       </div>
     </aside>
   );

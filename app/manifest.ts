@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CONNECT — Emmanuel Youth",
+    name: "CONNECT — Emmanuel Runners",
     short_name: "CONNECT",
     description: "Everything your youth ministry runs on, in one place.",
     start_url: "/home",

@@ -16,7 +16,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "CONNECT — Emmanuel Youth",
+  title: "CONNECT — Emmanuel Runners",
   description: "Everything your youth ministry runs on, in one place.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

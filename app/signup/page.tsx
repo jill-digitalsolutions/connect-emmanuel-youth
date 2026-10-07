@@ -31,7 +31,7 @@ export default async function SignupPage({
             Create your account
           </h1>
           <p className="mt-1 text-[13px] font-semibold tracking-[0.2em] text-white/85">
-            EMMANUEL YOUTH
+            EMMANUEL RUNNERS
           </p>
         </div>
 
