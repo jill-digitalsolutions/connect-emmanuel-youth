@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Trash2 } from "lucide-react";
+import { Send, SmilePlus, Trash2 } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
@@ -10,9 +10,16 @@ import { createClient } from "@/lib/supabase/client";
 import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { mergeChange } from "@/lib/utils/realtime";
 import { useCurrentUser } from "@/lib/context/CurrentUserContext";
-import type { ChatMessage } from "@/lib/types/database.types";
+import type { ChatEmoji, ChatMessage, ChatReaction } from "@/lib/types/database.types";
 import type { ProfileLite } from "@/lib/utils/profiles";
 import { MESSENGER_URL, ZOOM_URL } from "@/lib/utils/constants";
+
+const EMOJI: { key: ChatEmoji; char: string; label: string }[] = [
+  { key: "heart", char: "❤️", label: "Love" },
+  { key: "like", char: "👍", label: "Like" },
+  { key: "laugh", char: "😂", label: "Haha" },
+  { key: "sad", char: "😢", label: "Sad" },
+];
 
 function clock(iso: string) {
   const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T"));
@@ -23,20 +30,53 @@ function clock(iso: string) {
 
 export function ChatClient({
   initialMessages,
+  initialReactions,
   profilesById,
 }: {
   initialMessages: ChatMessage[];
+  initialReactions: ChatReaction[];
   profilesById: Map<string, ProfileLite>;
 }) {
   const me = useCurrentUser();
   const toast = useToast();
   const [messages, setMessages] = useState(initialMessages); // newest first
+  const [reactions, setReactions] = useState(initialReactions);
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
   useRealtimeTable<ChatMessage>("chat_messages", (payload) => {
     setMessages((prev) => mergeChange(prev, payload));
   });
+
+  useRealtimeTable<ChatReaction>("chat_reactions", (payload) => {
+    setReactions((prev) => mergeChange(prev, payload));
+  });
+
+  async function toggleReaction(messageId: string, emoji: ChatEmoji) {
+    setPickerFor(null);
+    const supabase = createClient();
+    const existing = reactions.find((r) => r.message_id === messageId && r.user_id === me.id && r.emoji === emoji);
+    if (existing) {
+      setReactions((prev) => prev.filter((r) => r.id !== existing.id));
+      const { error } = await supabase.from("chat_reactions").delete().eq("id", existing.id);
+      if (error) {
+        setReactions((prev) => [existing, ...prev]);
+        toast(error.message);
+      }
+      return;
+    }
+    const { data, error } = await supabase
+      .from("chat_reactions")
+      .insert({ message_id: messageId, user_id: me.id, emoji })
+      .select()
+      .single();
+    if (error) {
+      toast(/chat_reactions/.test(error.message) ? "Reactions aren't set up yet — run the reactions SQL in Supabase." : error.message);
+      return;
+    }
+    setReactions((prev) => (prev.some((r) => r.id === data.id) ? prev : [data, ...prev]));
+  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -81,6 +121,10 @@ export function ChatClient({
             const sender = profilesById.get(m.sender_id);
             const name = mine ? me.name : (sender?.name ?? "Member");
             // Older neighbour in the list = next index (list is newest-first).
+            const counts = EMOJI.map((e) => {
+              const list = reactions.filter((r) => r.message_id === m.id && r.emoji === e.key);
+              return { ...e, count: list.length, mine: list.some((r) => r.user_id === me.id) };
+            }).filter((e) => e.count > 0);
             const showName = messages[i + 1]?.sender_id !== m.sender_id;
             return (
               <div key={m.id} className={clsx("group flex items-end gap-2", mine && "flex-row-reverse")}>
@@ -96,6 +140,55 @@ export function ChatClient({
                     )}
                   >
                     {m.body}
+                  </div>
+                  <div className={clsx("relative mt-1 flex flex-wrap items-center gap-1", mine && "justify-end")}>
+                    {counts.map((c) => (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => toggleReaction(m.id, c.key)}
+                        aria-label={`${c.label} (${c.count})`}
+                        aria-pressed={c.mine}
+                        className={clsx(
+                          "flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] transition",
+                          c.mine ? "border-accent-to bg-accent-to/15 font-bold" : "border-line bg-surface hover:bg-page"
+                        )}
+                      >
+                        <span>{c.char}</span>
+                        <span className="text-[11px]">{c.count}</span>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
+                      aria-label="Add reaction"
+                      className={clsx(
+                        "flex h-6 w-6 items-center justify-center rounded-full text-text-soft transition hover:bg-page",
+                        pickerFor === m.id ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+                      )}
+                    >
+                      <SmilePlus className="h-3.5 w-3.5" />
+                    </button>
+                    {pickerFor === m.id && (
+                      <div
+                        className={clsx(
+                          "absolute bottom-full z-10 mb-1 flex gap-0.5 rounded-full border border-line bg-surface px-1.5 py-1 shadow-lg",
+                          mine ? "right-0" : "left-0"
+                        )}
+                      >
+                        {EMOJI.map((e) => (
+                          <button
+                            key={e.key}
+                            type="button"
+                            onClick={() => toggleReaction(m.id, e.key)}
+                            aria-label={e.label}
+                            className="rounded-full px-1.5 py-0.5 text-[20px] transition hover:scale-125"
+                          >
+                            {e.char}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <span className="mt-0.5 flex items-center gap-1.5 px-1 text-[10px] text-text-soft">
                     {clock(m.created_at)}

@@ -58,6 +58,24 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["chat_messages"]["Insert"]>;
         Relationships: [];
       };
+      chat_reactions: {
+        Row: {
+          id: string;
+          message_id: string;
+          user_id: string;
+          emoji: ChatEmoji;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          user_id: string;
+          emoji: ChatEmoji;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["chat_reactions"]["Insert"]>;
+        Relationships: [];
+      };
       posts: {
         Row: {
           id: string;
@@ -299,8 +317,10 @@ export interface Database {
   };
 }
 
+export type ChatEmoji = "heart" | "like" | "laugh" | "sad";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type ChatMessage = Database["public"]["Tables"]["chat_messages"]["Row"];
+export type ChatReaction = Database["public"]["Tables"]["chat_reactions"]["Row"];
 export type Post = Database["public"]["Tables"]["posts"]["Row"];
 export type Course = Database["public"]["Tables"]["courses"]["Row"];
 export type CourseProgress = Database["public"]["Tables"]["course_progress"]["Row"];
