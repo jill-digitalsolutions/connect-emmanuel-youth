@@ -37,12 +37,12 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[400px]">
         <div className="mb-6 flex flex-col items-center">
           <Image
-            src="/brand/connect-mark-v2.png"
+            src="/brand/connect-mark-v3.png"
             alt="CONNECT logo"
             width={220}
             height={155}
             priority
-            className="h-auto w-[150px]"
+            className="h-auto w-[120px]"
           />
           <h1 className="font-display -mt-1 text-[28px] font-bold text-white">Reset your password</h1>
           <p className="mt-2 text-center text-[13.5px] text-white/70">

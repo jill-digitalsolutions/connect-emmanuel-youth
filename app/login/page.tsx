@@ -21,14 +21,14 @@ export default async function LoginPage({
       <div className="w-full max-w-[400px]">
         <div className="mb-2 flex flex-col items-center">
           <Image
-            src="/brand/connect-mark-v2.png"
+            src="/brand/connect-mark-v3.png"
             alt="CONNECT logo"
             width={220}
             height={155}
             priority
-            className="h-auto w-[190px]"
+            className="h-auto w-[150px]"
           />
-          <h1 className="font-display -mt-2 text-[42px] font-bold tracking-wide text-white">
+          <h1 className="font-display mt-1 text-[42px] font-bold tracking-wide text-white">
             CONN<span className="text-accent-to">E</span>CT
           </h1>
           <p className="mt-1 text-[13px] font-semibold tracking-[0.25em] text-white/85">
