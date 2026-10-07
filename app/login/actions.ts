@@ -11,6 +11,12 @@ export async function login(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent("Enter your email and password.")}`);
   }
 
+  if (!email.includes("@")) {
+    redirect(
+      `/login?error=${encodeURIComponent("Please log in with the email address you signed up with. Usernames aren't supported yet.")}`
+    );
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
