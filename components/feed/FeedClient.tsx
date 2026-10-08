@@ -12,6 +12,7 @@ import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { mergeChange } from "@/lib/utils/realtime";
+import { notifyServer } from "@/lib/utils/notify";
 import { timeAgo } from "@/lib/utils/dates";
 import { POST_CATEGORY_COLOR } from "@/lib/utils/constants";
 import type { Post, PostCategory } from "@/lib/types/database.types";
@@ -51,17 +52,22 @@ export function FeedClient({
     }
     setSubmitting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("posts").insert({
-      title: title.trim(),
-      body: body.trim() || null,
-      category,
-      author_id: me.id,
-    });
+    const { data: created, error } = await supabase
+      .from("posts")
+      .insert({
+        title: title.trim(),
+        body: body.trim() || null,
+        category,
+        author_id: me.id,
+      })
+      .select("id")
+      .single();
     setSubmitting(false);
     if (error) {
       toast(error.message);
       return;
     }
+    if (category === "announcement" && created) notifyServer("announcement", created.id);
     setTitle("");
     setBody("");
     toast("Posted to the feed");

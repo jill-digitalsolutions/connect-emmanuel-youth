@@ -99,6 +99,36 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["topic_unlocks"]["Insert"]>;
         Relationships: [];
       };
+      notifications: {
+        Row: { id: string; kind: NotificationKind; title: string; body: string | null; link: string | null; actor_id: string | null; created_at: string };
+        Insert: { id?: string; kind: NotificationKind; title: string; body?: string | null; link?: string | null; actor_id?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["notifications"]["Insert"]>;
+        Relationships: [];
+      };
+      notification_state: {
+        Row: { user_id: string; seen_at: string };
+        Insert: { user_id: string; seen_at?: string };
+        Update: Partial<Database["public"]["Tables"]["notification_state"]["Insert"]>;
+        Relationships: [];
+      };
+      notification_prefs: {
+        Row: { user_id: string; announcements: boolean; banners: boolean; fellowship: boolean; reminders: boolean };
+        Insert: { user_id: string; announcements?: boolean; banners?: boolean; fellowship?: boolean; reminders?: boolean };
+        Update: Partial<Database["public"]["Tables"]["notification_prefs"]["Insert"]>;
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string };
+        Insert: { id?: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
+        Relationships: [];
+      };
+      session_reminders: {
+        Row: { session_id: string; sent_at: string };
+        Insert: { session_id: string; sent_at?: string };
+        Update: Partial<Database["public"]["Tables"]["session_reminders"]["Insert"]>;
+        Relationships: [];
+      };
       chat_messages: {
         Row: {
           id: string;
@@ -386,9 +416,12 @@ export interface Database {
   };
 }
 
+export type NotificationKind = "announcement" | "banner" | "fellowship" | "reminder";
 export type EnrollmentStatus = "pending" | "approved" | "declined";
 export type ChatEmoji = "heart" | "like" | "laugh" | "sad";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type AppNotification = Database["public"]["Tables"]["notifications"]["Row"];
+export type NotificationPrefs = Database["public"]["Tables"]["notification_prefs"]["Row"];
 export type ChatMessage = Database["public"]["Tables"]["chat_messages"]["Row"];
 export type ChatReaction = Database["public"]["Tables"]["chat_reactions"]["Row"];
 export type Post = Database["public"]["Tables"]["posts"]["Row"];

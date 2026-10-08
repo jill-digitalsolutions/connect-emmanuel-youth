@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { mergeChange } from "@/lib/utils/realtime";
 import { uploadToBucket } from "@/lib/utils/image";
+import { notifyServer } from "@/lib/utils/notify";
 import { datesInRange, formatDateRange, inferDatesFromLabel, todayIso } from "@/lib/utils/dates";
 import { useCurrentUser } from "@/lib/context/CurrentUserContext";
 import type { Banner, ColorTheme } from "@/lib/types/database.types";
@@ -123,12 +124,13 @@ export function BannersClient({ initialBanners }: { initialBanners: Banner[] }) 
         ...layout,
       };
       const supabase = createClient();
-      let { error } = await supabase.from("banners").insert(row);
+      let { data: created, error } = await supabase.from("banners").insert(row).select("id").single();
       if (error) {
         // Database not yet upgraded with the date/layout columns: save without them.
-        ({ error } = await supabase.from("banners").insert(stripNewFields(row) as typeof row));
+        ({ data: created, error } = await supabase.from("banners").insert(stripNewFields(row) as typeof row).select("id").single());
         if (!error) toast("Saved. Dates and layout options need the banner SQL update in Supabase.");
       } else {
+        if (created) notifyServer("banner", created.id);
         const calErr = await syncCalendar(supabase, null, {
           title: row.title,
           color,

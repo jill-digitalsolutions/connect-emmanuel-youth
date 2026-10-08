@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { AvatarMenu } from "./AvatarMenu";
+import { NotificationBell } from "./NotificationBell";
 import { PAGE_META } from "@/lib/utils/constants";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
@@ -33,6 +34,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         </div>
       </div>
       <div className="flex flex-none items-center gap-2.5">
+        <NotificationBell />
         <ThemeToggle />
         <AvatarMenu />
       </div>

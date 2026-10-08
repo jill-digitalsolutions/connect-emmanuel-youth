@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/Toast";
 import { createClient } from "@/lib/supabase/client";
 import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
 import { mergeChange } from "@/lib/utils/realtime";
+import { notifyServer } from "@/lib/utils/notify";
 import { dayAndMonth, todayIso } from "@/lib/utils/dates";
 import { useCurrentUser } from "@/lib/context/CurrentUserContext";
 import type { FellowshipSession } from "@/lib/types/database.types";
@@ -45,17 +46,22 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
     }
     setSubmitting(true);
     const supabase = createClient();
-    const { error } = await supabase.from("sessions").insert({
-      title: title.trim(),
-      date,
-      time: time || null,
-      video_link: link.trim() || null,
-    });
+    const { data: created, error } = await supabase
+      .from("sessions")
+      .insert({
+        title: title.trim(),
+        date,
+        time: time || null,
+        video_link: link.trim() || null,
+      })
+      .select("id")
+      .single();
     setSubmitting(false);
     if (error) {
       toast(error.message);
       return;
     }
+    if (created) notifyServer("fellowship", created.id);
     setTitle("");
     setDate("");
     form.reset();
