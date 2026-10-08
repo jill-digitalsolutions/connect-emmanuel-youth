@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getRealProfile, getServerClient } from "@/lib/supabase/session";
 
-function back(id: string, kind: "notice" | "error", message: string): never {
-  redirect(`/members/${id}?${kind}=${encodeURIComponent(message)}`);
+// `edit` keeps the page in edit mode (used while adding several ministries).
+function back(id: string, kind: "notice" | "error", message: string, edit = false): never {
+  redirect(`/members/${id}?${kind}=${encodeURIComponent(message)}${edit ? "&edit=1" : ""}`);
 }
 
 async function requireAdmin(id: string) {
@@ -33,7 +34,7 @@ export async function assignMinistry(formData: FormData) {
   await requireAdmin(userId);
   const name = String(formData.get("ministry") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim() || "Member";
-  if (!name) back(userId, "error", "Choose or type a ministry.");
+  if (!name) back(userId, "error", "Choose or type a ministry.", true);
 
   const supabase = await getServerClient();
   // Reuse an existing ministry with this name (any capitalisation), else create it.
@@ -47,9 +48,9 @@ export async function assignMinistry(formData: FormData) {
   const { error } = await supabase
     .from("ministry_members")
     .upsert({ ministry_id: ministryId, user_id: userId, role }, { onConflict: "ministry_id,user_id" });
-  if (error) back(userId, "error", error.message);
+  if (error) back(userId, "error", error.message, true);
   revalidatePath(`/members/${userId}`);
-  back(userId, "notice", `Saved: ${name} — ${role}.`);
+  back(userId, "notice", `Saved: ${name} — ${role}.`, true);
 }
 
 export async function removeMinistry(formData: FormData) {
@@ -60,5 +61,5 @@ export async function removeMinistry(formData: FormData) {
   const { error } = await supabase.from("ministry_members").delete().eq("id", id).eq("user_id", userId);
   if (error) back(userId, "error", error.message);
   revalidatePath(`/members/${userId}`);
-  back(userId, "notice", "Removed from ministry.");
+  back(userId, "notice", "Removed from ministry.", true);
 }

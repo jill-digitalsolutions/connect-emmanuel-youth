@@ -18,9 +18,9 @@ export default async function MemberProfilePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ notice?: string; error?: string }>;
+  searchParams: Promise<{ notice?: string; error?: string; edit?: string }>;
 }) {
-  const [{ id }, { notice, error }, viewer] = await Promise.all([params, searchParams, getProfile()]);
+  const [{ id }, { notice, error, edit }, viewer] = await Promise.all([params, searchParams, getProfile()]);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const detail = await getMemberDetail(id);
   if (!detail || detail.profile.approved === false) notFound();
@@ -29,6 +29,12 @@ export default async function MemberProfilePage({
   const isAdmin = viewer?.role === "admin";
   const isMe = viewer?.id === profile.id;
   const canSeeAddress = isMe || isAdmin;
+  // Admins can edit anyone; a member can edit only their own address.
+  const canEdit = isAdmin || isMe;
+  const editing = canEdit && edit === "1";
+
+  // Other people see a clean read-only profile: only sections that have content.
+  const showEmpty = canEdit;
 
   const inProgress = trainings.filter((t) => t.modules_done < t.total_modules);
   const completed = trainings.filter((t) => t.modules_done >= t.total_modules);
@@ -54,6 +60,16 @@ export default async function MemberProfilePage({
               </span>
             )}
           </div>
+          {canEdit && (
+            <Link
+              href={editing ? `/members/${profile.id}` : `/members/${profile.id}?edit=1`}
+              className={`ml-auto flex-none rounded-[10px] px-4 py-2 text-sm font-bold no-underline ${
+                editing ? "bg-moss text-white" : "border border-line text-text hover:bg-page"
+              }`}
+            >
+              {editing ? "Done" : "Edit"}
+            </Link>
+          )}
         </div>
       </Card>
 
@@ -61,28 +77,38 @@ export default async function MemberProfilePage({
         <>
           <SectionHead title="Address" />
           <Card>
-            <form action={saveAddress}>
-              <input type="hidden" name="userId" value={profile.id} />
-              <FieldLabel>
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" /> Where they live
-                </span>
-              </FieldLabel>
-              <TextArea name="address" defaultValue={address ?? ""} maxLength={300} placeholder="Street, barangay, city" />
-              <p className="mt-1 mb-0 text-xs text-text-soft">Only {isMe ? "you and admins" : "admins and this member"} can see this.</p>
-              <button
-                type="submit"
-                className="mt-3 rounded-[10px] bg-gradient-to-r from-accent-from to-accent-to px-4 py-2 text-sm font-bold text-white"
-              >
-                Save address
-              </button>
-            </form>
+            {editing ? (
+              <form action={saveAddress}>
+                <input type="hidden" name="userId" value={profile.id} />
+                <FieldLabel>
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" /> Where they live
+                  </span>
+                </FieldLabel>
+                <TextArea name="address" defaultValue={address ?? ""} maxLength={300} placeholder="Street, barangay, city" />
+                <p className="mt-1 mb-0 text-xs text-text-soft">
+                  Only {isMe ? "you and admins" : "admins and this member"} can see this.
+                </p>
+                <button
+                  type="submit"
+                  className="mt-3 rounded-[10px] bg-gradient-to-r from-accent-from to-accent-to px-4 py-2 text-sm font-bold text-white"
+                >
+                  Save address
+                </button>
+              </form>
+            ) : (
+              <div className="flex items-start gap-2 text-[14px]">
+                <MapPin className="mt-0.5 h-4 w-4 flex-none text-text-soft" />
+                <span className={address ? "" : "text-text-soft"}>{address || "No address added"}</span>
+              </div>
+            )}
           </Card>
         </>
       )}
 
-      <SectionHead title="Ministries & roles" />
+      {(ministries.length > 0 || showEmpty) && <SectionHead title="Ministries & roles" />}
       {ministries.length === 0 ? (
+        !showEmpty ? null :
         <Card>
           <EmptyState>Not in any ministry yet.</EmptyState>
         </Card>
@@ -95,7 +121,7 @@ export default async function MemberProfilePage({
                   <div className="truncate text-[14.5px] font-bold">{m.name}</div>
                   <div className="text-[13px] text-text-soft">{m.role}</div>
                 </div>
-                {isAdmin && (
+                {isAdmin && editing && (
                   <form action={removeMinistry}>
                     <input type="hidden" name="userId" value={profile.id} />
                     <input type="hidden" name="id" value={m.id} />
@@ -110,7 +136,7 @@ export default async function MemberProfilePage({
         </Card>
       )}
 
-      {isAdmin && (
+      {isAdmin && editing && (
         <Card className="mt-3">
           <h4 className="m-0 mb-1 text-[15px] font-semibold">Add or change a ministry role</h4>
           <form action={assignMinistry}>
@@ -136,8 +162,9 @@ export default async function MemberProfilePage({
         </Card>
       )}
 
-      <SectionHead title="Currently in training" />
+      {(inProgress.length > 0 || showEmpty) && <SectionHead title="Currently in training" />}
       {inProgress.length === 0 ? (
+        !showEmpty ? null :
         <Card>
           <EmptyState>Not currently in any training.</EmptyState>
         </Card>
@@ -153,6 +180,12 @@ export default async function MemberProfilePage({
             </Card>
           ))}
         </div>
+      )}
+
+      {!showEmpty && ministries.length === 0 && trainings.length === 0 && (
+        <Card className="mt-3">
+          <EmptyState>No ministry or training details added yet.</EmptyState>
+        </Card>
       )}
 
       {completed.length > 0 && (
