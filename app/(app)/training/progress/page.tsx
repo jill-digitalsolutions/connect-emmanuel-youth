@@ -34,19 +34,33 @@ export default async function ProgressPage({ searchParams }: { searchParams: Pro
         </Card>
       ) : (
         <>
-          <div className="mb-4 flex flex-wrap gap-2">
+          <h3 className="m-0 mb-2.5 text-[17px] font-semibold">All trainings at a glance</h3>
+          <div className="mb-5 grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
             {courses.map((c) => {
-              const n = c.rows.filter((r) => r.status === "approved").length;
+              const appr = c.rows.filter((r) => r.status === "approved");
+              const wait = c.rows.filter((r) => r.status === "pending").length;
+              const fin = appr.filter((r) => c.total > 0 && r.done >= c.total).length;
+              const average = appr.length && c.total ? Math.round((appr.reduce((sum, r) => sum + r.done / c.total, 0) / appr.length) * 100) : 0;
+              const active = c.id === selected.id;
               return (
                 <Link
                   key={c.id}
                   href={`/training/progress?course=${c.id}`}
                   className={clsx(
-                    "rounded-full border px-3.5 py-1.5 text-[13px] font-bold no-underline transition",
-                    c.id === selected.id ? "border-transparent bg-amber text-[#3B2504]" : "border-line bg-surface text-text hover:bg-page"
+                    "block rounded-xl border bg-surface p-3.5 no-underline transition hover:shadow-md",
+                    active ? "border-amber shadow-[inset_0_0_0_1px_var(--color-amber)]" : "border-line"
                   )}
                 >
-                  {c.title.split(" — ")[0]} <span className="opacity-70">({n})</span>
+                  <div className="truncate text-[14.5px] font-bold text-text">{c.title.split(" — ")[0]}</div>
+                  <div className="text-xs text-text-soft">{c.total} topics</div>
+                  <div className="mt-2 flex items-baseline justify-between text-xs text-text-soft">
+                    <span>
+                      <b className="text-text">{appr.length}</b> enrolled · <b className="text-text">{fin}</b> done
+                      {wait > 0 && <> · <b className="text-amber-ink">{wait}</b> waiting</>}
+                    </span>
+                    <span className="font-extrabold text-amber-ink">{average}%</span>
+                  </div>
+                  <ProgressBar percent={average} />
                 </Link>
               );
             })}
