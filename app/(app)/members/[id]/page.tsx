@@ -172,7 +172,12 @@ export default async function MemberProfilePage({
         <div className="grid gap-3 tablet:grid-cols-2">
           {inProgress.map((t) => (
             <Card key={t.id}>
-              <div className="text-[14.5px] font-bold">{t.title}</div>
+              <div className="flex items-baseline justify-between gap-2">
+                <div className="text-[14.5px] font-bold">{t.title}</div>
+                <div className="text-[13px] font-extrabold text-amber-ink">
+                  {Math.round((t.modules_done / t.total_modules) * 100)}%
+                </div>
+              </div>
               <div className="text-xs text-text-soft">
                 {t.track} · {t.modules_done} of {t.total_modules} modules
               </div>
