@@ -63,6 +63,42 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["profile_private"]["Insert"]>;
         Relationships: [];
       };
+      course_modules: {
+        Row: { id: string; course_id: string; position: number; title: string; created_at: string };
+        Insert: { id?: string; course_id: string; position: number; title: string; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["course_modules"]["Insert"]>;
+        Relationships: [];
+      };
+      course_topics: {
+        Row: {
+          id: string; course_id: string; module_id: string; position: number; title: string;
+          pdf_path: string | null; pdf_name: string | null; youtube_url: string | null; created_at: string;
+        };
+        Insert: {
+          id?: string; course_id: string; module_id: string; position: number; title: string;
+          pdf_path?: string | null; pdf_name?: string | null; youtube_url?: string | null; created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["course_topics"]["Insert"]>;
+        Relationships: [];
+      };
+      course_enrollments: {
+        Row: { id: string; course_id: string; user_id: string; status: EnrollmentStatus; requested_at: string; decided_at: string | null };
+        Insert: { id?: string; course_id: string; user_id: string; status?: EnrollmentStatus; requested_at?: string; decided_at?: string | null };
+        Update: Partial<Database["public"]["Tables"]["course_enrollments"]["Insert"]>;
+        Relationships: [];
+      };
+      topic_completions: {
+        Row: { id: string; user_id: string; topic_id: string; course_id: string; completed_at: string };
+        Insert: { id?: string; user_id: string; topic_id: string; course_id: string; completed_at?: string };
+        Update: Partial<Database["public"]["Tables"]["topic_completions"]["Insert"]>;
+        Relationships: [];
+      };
+      topic_unlocks: {
+        Row: { id: string; user_id: string; topic_id: string; unlocked_at: string };
+        Insert: { id?: string; user_id: string; topic_id: string; unlocked_at?: string };
+        Update: Partial<Database["public"]["Tables"]["topic_unlocks"]["Insert"]>;
+        Relationships: [];
+      };
       chat_messages: {
         Row: {
           id: string;
@@ -332,6 +368,10 @@ export interface Database {
         Args: { p_username: string };
         Returns: boolean;
       };
+      topic_available: {
+        Args: { p_user: string; p_topic: string };
+        Returns: boolean;
+      };
       set_my_avatar: {
         Args: { p_url: string };
         Returns: undefined;
@@ -346,6 +386,7 @@ export interface Database {
   };
 }
 
+export type EnrollmentStatus = "pending" | "approved" | "declined";
 export type ChatEmoji = "heart" | "like" | "laugh" | "sad";
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type ChatMessage = Database["public"]["Tables"]["chat_messages"]["Row"];

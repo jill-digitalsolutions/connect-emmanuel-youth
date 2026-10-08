@@ -36,8 +36,8 @@ export default async function MemberProfilePage({
   // Other people see a clean read-only profile: only sections that have content.
   const showEmpty = canEdit;
 
-  const inProgress = trainings.filter((t) => t.modules_done < t.total_modules);
-  const completed = trainings.filter((t) => t.modules_done >= t.total_modules);
+  const inProgress = trainings.filter((t) => t.done < t.total || t.total === 0);
+  const completed = trainings.filter((t) => t.total > 0 && t.done >= t.total);
 
   return (
     <div>
@@ -175,13 +175,13 @@ export default async function MemberProfilePage({
               <div className="flex items-baseline justify-between gap-2">
                 <div className="text-[14.5px] font-bold">{t.title}</div>
                 <div className="text-[13px] font-extrabold text-amber-ink">
-                  {Math.round((t.modules_done / t.total_modules) * 100)}%
+                  {t.total ? Math.round((t.done / t.total) * 100) : 0}%
                 </div>
               </div>
               <div className="text-xs text-text-soft">
-                {t.track} · {t.modules_done} of {t.total_modules} modules
+                {t.track} · {t.done} of {t.total} topics
               </div>
-              <ProgressBar percent={(t.modules_done / t.total_modules) * 100} />
+              <ProgressBar percent={t.total ? (t.done / t.total) * 100 : 0} />
             </Card>
           ))}
         </div>

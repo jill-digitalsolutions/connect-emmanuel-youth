@@ -1,185 +1,167 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { BookOpen, Check, Clock } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { Button } from "@/components/ui/Button";
-import { FieldLabel, TextInput, FormRow, Select } from "@/components/ui/FormField";
-import { useToast } from "@/components/ui/Toast";
-import { createClient } from "@/lib/supabase/client";
-import { useRealtimeTable } from "@/lib/hooks/useRealtimeTable";
-import { mergeChange } from "@/lib/utils/realtime";
+import { FieldLabel, TextInput, Select } from "@/components/ui/FormField";
+import { Avatar } from "@/components/ui/Avatar";
 import { TRACK_ICONS } from "@/lib/utils/constants";
-import { useCurrentUser } from "@/lib/context/CurrentUserContext";
-import type { Course, CourseTrack } from "@/lib/types/database.types";
-import type { CourseWithProgress } from "@/lib/queries/training";
+import type { CourseTrack } from "@/lib/types/database.types";
+import type { Catalog } from "@/lib/queries/training";
+import { addCourse, cancelEnrollment, decideEnrollment, requestEnrollment } from "@/app/(app)/training/actions";
 
 const TRACKS: CourseTrack[] = ["Leadership", "Bible Study", "Media Team", "Worship"];
 
-export function TrainingClient({ initialCourses }: { initialCourses: CourseWithProgress[] }) {
-  const [courses, setCourses] = useState(initialCourses);
-  const [title, setTitle] = useState("");
-  const [track, setTrack] = useState<CourseTrack>("Leadership");
-  const [modules, setModules] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const toast = useToast();
-  const me = useCurrentUser();
-  const isAdmin = me.role === "admin";
-
-  useRealtimeTable<Course>("courses", (payload) => {
-    setCourses((prev) => {
-      const merged = mergeChange(prev as unknown as Course[], payload);
-      return merged.map((c) => {
-        const existing = prev.find((p) => p.id === c.id);
-        return { ...c, modules_done: existing?.modules_done ?? 0 };
-      });
-    });
-  });
-
-  useRealtimeTable<{ course_id: string; modules_done: number; user_id: string }>(
-    "course_progress",
-    (payload) => {
-      const row = (payload.new ?? payload.old) as { course_id: string; modules_done: number; user_id: string };
-      if (!row || row.user_id !== me.id) return;
-      setCourses((prev) =>
-        prev.map((c) => (c.id === row.course_id ? { ...c, modules_done: row.modules_done } : c))
-      );
-    },
-    `user_id=eq.${me.id}`
-  );
-
-  async function incrementProgress(course: CourseWithProgress) {
-    if (course.modules_done >= course.total_modules) return;
-    const nextDone = course.modules_done + 1;
-    setCourses((prev) => prev.map((c) => (c.id === course.id ? { ...c, modules_done: nextDone } : c)));
-
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("course_progress")
-      .upsert(
-        { course_id: course.id, user_id: me.id, modules_done: nextDone },
-        { onConflict: "course_id,user_id" }
-      );
-    if (error) {
-      toast(error.message);
-      setCourses((prev) => prev.map((c) => (c.id === course.id ? course : c)));
-    } else {
-      toast("Progress saved");
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const total = parseInt(modules, 10);
-    if (!title.trim()) {
-      toast("Add a course title");
-      return;
-    }
-    setSubmitting(true);
-    const supabase = createClient();
-    const { error } = await supabase.from("courses").insert({
-      title: title.trim(),
-      track,
-      total_modules: total > 0 ? total : 1,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast(error.message);
-      return;
-    }
-    setTitle("");
-    setModules("");
-    toast("Training added");
-  }
-
-  const grouped = useMemo(() => {
-    const map = new Map<CourseTrack, CourseWithProgress[]>();
-    for (const t of TRACKS) map.set(t, []);
-    for (const c of courses) map.get(c.track)?.push(c);
-    return map;
-  }, [courses]);
+export function TrainingClient({
+  catalog,
+  notice,
+  error,
+  isAdmin,
+}: {
+  catalog: Catalog;
+  notice?: string;
+  error?: string;
+  isAdmin: boolean;
+}) {
+  const { cards, requests } = catalog;
 
   return (
     <div>
+      {notice && <p className="mb-4 rounded-xl bg-moss-bg px-4 py-3 text-[13.5px] font-semibold text-moss-ink">{notice}</p>}
+      {error && <p className="mb-4 rounded-xl bg-coral-bg px-4 py-3 text-[13.5px] font-semibold text-coral-ink">{error}</p>}
+
+      {isAdmin && requests.length > 0 && (
+        <Card className="mb-4 border-amber">
+          <h3 className="m-0 mb-1 text-[17px] font-semibold">Enrollment requests ({requests.length})</h3>
+          <p className="m-0 mb-3 text-[13px] text-text-soft">Approve to let them start the lessons.</p>
+          <div className="divide-y divide-line">
+            {requests.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <Avatar name={r.user.name} avatarUrl={r.user.avatar_url} size={36} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14px] font-bold">{r.user.name}</div>
+                  <div className="truncate text-xs text-text-soft">
+                    {r.user.username ? `@${r.user.username} · ` : ""}wants to join {r.course_title}
+                  </div>
+                </div>
+                <form action={decideEnrollment} className="flex gap-1.5">
+                  <input type="hidden" name="id" value={r.id} />
+                  <input type="hidden" name="returnTo" value="/training" />
+                  <button name="decision" value="approve" className="rounded-lg bg-moss px-3 py-1.5 text-xs font-bold text-white">
+                    Approve
+                  </button>
+                  <button name="decision" value="decline" className="rounded-lg border border-line px-3 py-1.5 text-xs font-bold hover:bg-page">
+                    Decline
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {isAdmin && (
         <Card>
-          <form onSubmit={handleSubmit}>
-            <FieldLabel>Course / webinar title</FieldLabel>
-            <TextInput
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Small Group Facilitation 101"
-            />
-            <FormRow>
-              <div>
-                <FieldLabel>Track</FieldLabel>
-                <Select value={track} onChange={(e) => setTrack(e.target.value as CourseTrack)}>
-                  {TRACKS.map((t) => (
-                    <option key={t}>{t}</option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <FieldLabel>Total modules</FieldLabel>
-                <TextInput
-                  value={modules}
-                  onChange={(e) => setModules(e.target.value)}
-                  placeholder="e.g. 6"
-                  inputMode="numeric"
-                />
-              </div>
-            </FormRow>
-            <div className="mt-3.5">
-              <Button type="submit" variant="amber" disabled={submitting}>
-                {submitting ? "Adding…" : "Add training"}
-              </Button>
-            </div>
+          <form action={addCourse}>
+            <FieldLabel>New training</FieldLabel>
+            <TextInput name="title" required maxLength={120} placeholder="e.g. DLT 1 — Discipleship Leadership Training" />
+            <FieldLabel>Track</FieldLabel>
+            <Select name="track">
+              {TRACKS.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </Select>
+            <p className="mt-2 mb-0 text-xs text-text-soft">You add the modules, topics, videos and PDFs on the next screen.</p>
+            <button type="submit" className="mt-3 rounded-[10px] bg-amber px-4 py-2.5 text-sm font-bold text-[#3B2504]">
+              Create training
+            </button>
           </form>
         </Card>
       )}
 
-      {TRACKS.map((t) => {
-        const list = grouped.get(t) ?? [];
+      {TRACKS.map((track) => {
+        const list = cards.filter((c) => c.course.track === track);
         return (
-          <div key={t}>
-            <SectionHead title={t} />
-            <Card>
-              {list.length === 0 ? (
+          <div key={track}>
+            <SectionHead title={track} />
+            {list.length === 0 ? (
+              <Card>
                 <EmptyState>No trainings in this track yet.</EmptyState>
-              ) : (
-                <div className="divide-y divide-line">
-                  {list.map((c) => {
-                    const pct = c.total_modules ? Math.round((c.modules_done / c.total_modules) * 100) : 0;
-                    const complete = c.modules_done >= c.total_modules;
-                    return (
-                      <div key={c.id} className="flex items-center gap-3.5 py-3.5 first:pt-0 last:pb-0">
+              </Card>
+            ) : (
+              <div className="grid gap-3 tablet:grid-cols-2">
+                {list.map(({ course, modules, topics, status, done }) => {
+                  const pct = topics ? Math.round((done / topics) * 100) : 0;
+                  const complete = topics > 0 && done >= topics;
+                  return (
+                    <Card key={course.id} className="flex flex-col">
+                      <div className="flex items-start gap-3">
                         <div className="flex h-10.5 w-10.5 flex-none items-center justify-center rounded-[10px] bg-amber-bg text-lg">
-                          {TRACK_ICONS[c.track]}
+                          {TRACK_ICONS[course.track]}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="m-0 mb-0.5 text-[14.5px] font-bold">{c.title}</h4>
-                          <div className="text-xs text-text-soft">
-                            {c.track} · {c.modules_done}/{c.total_modules} modules
-                            {complete ? " · Complete" : ""}
+                          <Link href={`/training/${course.id}`} className="text-[15px] font-bold text-text no-underline hover:underline">
+                            {course.title}
+                          </Link>
+                          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-text-soft">
+                            <BookOpen className="h-3.5 w-3.5" />
+                            {modules} {modules === 1 ? "module" : "modules"} · {topics} {topics === 1 ? "topic" : "topics"}
                           </div>
-                          <ProgressBar percent={pct} />
                         </div>
-                        <Button
-                          size="sm"
-                          variant={complete ? "ghost" : "amber"}
-                          disabled={complete}
-                          onClick={() => incrementProgress(c)}
-                        >
-                          {complete ? "Done" : "+1 module"}
-                        </Button>
+                        {complete && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-moss-bg px-2 py-0.5 text-[10px] font-extrabold text-moss-ink">
+                            <Check className="h-3 w-3" /> Completed
+                          </span>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
+
+                      {status === "approved" ? (
+                        <>
+                          <ProgressBar percent={pct} />
+                          <div className="mt-1.5 flex items-center justify-between text-xs text-text-soft">
+                            <span>
+                              {done} of {topics} topics
+                            </span>
+                            <span className="font-extrabold text-amber-ink">{pct}%</span>
+                          </div>
+                          <Link
+                            href={`/training/${course.id}`}
+                            className="mt-3 rounded-[10px] bg-amber py-2 text-center text-sm font-bold text-[#3B2504] no-underline"
+                          >
+                            {complete ? "Review lessons" : done > 0 ? "Continue" : "Start learning"}
+                          </Link>
+                        </>
+                      ) : status === "pending" ? (
+                        <form action={cancelEnrollment} className="mt-3 flex items-center gap-2">
+                          <input type="hidden" name="courseId" value={course.id} />
+                          <input type="hidden" name="returnTo" value="/training" />
+                          <span className="inline-flex flex-1 items-center gap-1.5 rounded-[10px] bg-amber-bg px-3 py-2 text-[13px] font-bold text-amber-ink">
+                            <Clock className="h-4 w-4" /> Waiting for admin approval
+                          </span>
+                          <button className="rounded-[10px] border border-line px-3 py-2 text-xs font-bold hover:bg-page">Cancel</button>
+                        </form>
+                      ) : (
+                        <form action={requestEnrollment} className="mt-3">
+                          <input type="hidden" name="courseId" value={course.id} />
+                          <input type="hidden" name="returnTo" value="/training" />
+                          {status === "declined" && (
+                            <p className="mt-0 mb-2 text-xs text-coral-ink">Your last request wasn&apos;t approved. You can ask again.</p>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={topics === 0 && !isAdmin}
+                            className="w-full rounded-[10px] bg-amber py-2 text-sm font-bold text-[#3B2504] disabled:opacity-50"
+                          >
+                            {topics === 0 ? "Coming soon" : "Enroll"}
+                          </button>
+                        </form>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}

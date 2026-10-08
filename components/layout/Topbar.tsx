@@ -10,7 +10,11 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
   const meta =
     PAGE_META[pathname] ??
-    (pathname.startsWith("/members/") ? { title: "Member profile", subtitle: "Ministries, roles and training." } : { title: "CONNECT", subtitle: "" });
+    (pathname.startsWith("/members/")
+      ? { title: "Member profile", subtitle: "Ministries, roles and training." }
+      : pathname.startsWith("/training/")
+        ? { title: "Training", subtitle: "Lessons, videos and progress." }
+        : { title: "CONNECT", subtitle: "" });
 
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-surface px-5 py-4.5 tablet:px-7">
