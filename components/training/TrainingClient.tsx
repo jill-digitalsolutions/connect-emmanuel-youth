@@ -31,6 +31,16 @@ export function TrainingClient({
       {notice && <p className="mb-4 rounded-xl bg-moss-bg px-4 py-3 text-[13.5px] font-semibold text-moss-ink">{notice}</p>}
       {error && <p className="mb-4 rounded-xl bg-coral-bg px-4 py-3 text-[13.5px] font-semibold text-coral-ink">{error}</p>}
 
+      {isAdmin && (
+        <Link
+          href="/training/progress"
+          className="mb-4 flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-[14px] font-bold text-text no-underline hover:bg-page"
+        >
+          Enrollment and progress overview
+          <span className="text-accent-to">View →</span>
+        </Link>
+      )}
+
       {isAdmin && requests.length > 0 && (
         <Card className="mb-4 border-amber">
           <h3 className="m-0 mb-1 text-[17px] font-semibold">Enrollment requests ({requests.length})</h3>
