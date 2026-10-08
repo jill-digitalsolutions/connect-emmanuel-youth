@@ -12,9 +12,9 @@ import { useToast } from "@/components/ui/Toast";
 import { useCurrentUser } from "@/lib/context/CurrentUserContext";
 import { createClient } from "@/lib/supabase/client";
 import { uploadToBucket, validateImageFile } from "@/lib/utils/image";
-import type { Profile } from "@/lib/types/database.types";
+import type { MemberCardData } from "@/lib/queries/members";
 
-export function MembersClient({ members }: { members: Profile[] }) {
+export function MembersClient({ members: cards }: { members: MemberCardData[] }) {
   const me = useCurrentUser();
   const router = useRouter();
   const toast = useToast();
@@ -22,13 +22,18 @@ export function MembersClient({ members }: { members: Profile[] }) {
   const [uploading, setUploading] = useState(false);
   const [myPhoto, setMyPhoto] = useState<string | null>(null);
 
+  const members = useMemo(() => cards.map((c) => c.profile), [cards]);
   const q = query.trim().toLowerCase().replace(/^@/, "");
   const shown = useMemo(
     () =>
-      members.filter(
-        (m) => !q || m.name.toLowerCase().includes(q) || (m.username ?? "").toLowerCase().includes(q)
+      cards.filter(
+        ({ profile: m, ministries }) =>
+          !q ||
+          m.name.toLowerCase().includes(q) ||
+          (m.username ?? "").toLowerCase().includes(q) ||
+          ministries.some((x) => x.name.toLowerCase().includes(q) || x.role.toLowerCase().includes(q))
       ),
-    [members, q]
+    [cards, q]
   );
 
   async function changePhoto(file: File | undefined) {
@@ -93,13 +98,13 @@ export function MembersClient({ members }: { members: Profile[] }) {
         </div>
       </Card>
 
-      <SectionHead title={`All members (${members.length})`} />
+      <SectionHead title={`All members (${cards.length})`} />
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-text-soft" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or @username"
+          placeholder="Search by name, @username or ministry"
           className="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-10 text-[14px] text-text focus:border-accent-to focus:outline-none"
         />
       </div>
@@ -110,21 +115,36 @@ export function MembersClient({ members }: { members: Profile[] }) {
         </Card>
       ) : (
         <div className="grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
-          {shown.map((m) => (
+          {shown.map(({ profile: m, ministries }) => (
             <Link key={m.id} href={`/members/${m.id}`} className="block no-underline">
-            <Card className="flex items-center gap-3 p-3.5! transition hover:shadow-md">
-              <Avatar name={m.name} avatarUrl={m.id === me.id ? (myPhoto ?? m.avatar_url) : m.avatar_url} size={48} />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14.5px] font-bold">
-                  {m.name}
-                  {m.id === me.id && <span className="ml-1.5 text-xs font-semibold text-text-soft">(you)</span>}
+              <Card className="h-full p-3.5! transition hover:shadow-md">
+                <div className="flex items-center gap-3">
+                  <Avatar name={m.name} avatarUrl={m.id === me.id ? (myPhoto ?? m.avatar_url) : m.avatar_url} size={48} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[14.5px] font-bold text-text">
+                      {m.name}
+                      {m.id === me.id && <span className="ml-1.5 text-xs font-semibold text-text-soft">(you)</span>}
+                    </div>
+                    <div className="truncate text-[13px] text-text-soft">{m.username ? `@${m.username}` : "no username"}</div>
+                  </div>
+                  {m.role === "admin" && (
+                    <span className="rounded-full bg-plum-bg px-2 py-0.5 text-[10px] font-extrabold text-plum-ink">Admin</span>
+                  )}
                 </div>
-                <div className="truncate text-[13px] text-text-soft">{m.username ? `@${m.username}` : "no username"}</div>
-              </div>
-              {m.role === "admin" && (
-                <span className="rounded-full bg-plum-bg px-2 py-0.5 text-[10px] font-extrabold text-plum-ink">Admin</span>
-              )}
-            </Card>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {ministries.length === 0 ? (
+                    <span className="text-xs text-text-soft">No ministry yet</span>
+                  ) : (
+                    ministries.map((x) => (
+                      <span key={x.name} className="rounded-full bg-moss-bg px-2.5 py-1 text-[11.5px] font-bold text-moss-ink">
+                        {x.name} · {x.role}
+                      </span>
+                    ))
+                  )}
+                </div>
+
+              </Card>
             </Link>
           ))}
         </div>
