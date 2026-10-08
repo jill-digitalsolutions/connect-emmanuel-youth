@@ -34,7 +34,7 @@ export async function createAccount(formData: FormData) {
   if (password.length < 6) back("error", "Password must be at least 6 characters.");
 
   const supabase = await getServerClient();
-  const { data: taken } = await supabase.rpc("login_email_for_username", { p_username: username });
+  const { data: taken } = await supabase.rpc("username_taken", { p_username: username });
   if (taken) back("error", "That username is already taken.");
 
   // A throwaway client that never stores a session, so creating someone

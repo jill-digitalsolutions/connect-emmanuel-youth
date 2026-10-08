@@ -38,6 +38,11 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
       toast("Add a title and date");
       return;
     }
+    const rawLink = link.trim();
+    if (rawLink && !/^https?:\/\//i.test(rawLink)) {
+      toast("The video link must start with http:// or https://");
+      return;
+    }
     setSubmitting(true);
     const supabase = createClient();
     const { error } = await supabase.from("sessions").insert({
@@ -120,7 +125,7 @@ export function FellowshipClient({ initialSessions }: { initialSessions: Fellows
                     <h4 className="m-0 mb-0.5 text-[14.5px] font-bold">{s.title}</h4>
                     <div className="text-xs text-text-soft">{s.time || ""} · Video call</div>
                   </div>
-                  {s.video_link && (
+                  {s.video_link && /^https?:\/\//i.test(s.video_link) && (
                     <a
                       href={s.video_link}
                       target="_blank"

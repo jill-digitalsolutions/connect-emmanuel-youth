@@ -20,7 +20,7 @@ export async function signup(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { data: taken } = await supabase.rpc("login_email_for_username", { p_username: username });
+  const { data: taken } = await supabase.rpc("username_taken", { p_username: username });
   if (taken) {
     redirect(`/signup?error=${encodeURIComponent("That username is already taken.")}`);
   }
