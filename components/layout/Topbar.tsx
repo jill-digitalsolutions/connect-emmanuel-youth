@@ -8,7 +8,9 @@ import { PAGE_META } from "@/lib/utils/constants";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
-  const meta = PAGE_META[pathname] ?? { title: "CONNECT", subtitle: "" };
+  const meta =
+    PAGE_META[pathname] ??
+    (pathname.startsWith("/members/") ? { title: "Member profile", subtitle: "Ministries, roles and training." } : { title: "CONNECT", subtitle: "" });
 
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-surface px-5 py-4.5 tablet:px-7">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Search } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -82,6 +83,9 @@ export function MembersClient({ members }: { members: Profile[] }) {
           <div className="min-w-0">
             <div className="truncate text-[17px] font-bold">{me.name}</div>
             <div className="text-[13px] text-text-soft">{me.username ? `@${me.username}` : "no username"}</div>
+            <Link href={`/members/${me.id}`} className="mt-1 mr-3 inline-block text-xs font-bold text-accent-to">
+              My profile
+            </Link>
             <div className="mt-1 text-xs font-semibold text-accent-to">
               {uploading ? "Uploading…" : "Tap your photo to change it"}
             </div>
@@ -107,7 +111,8 @@ export function MembersClient({ members }: { members: Profile[] }) {
       ) : (
         <div className="grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
           {shown.map((m) => (
-            <Card key={m.id} className="flex items-center gap-3 p-3.5!">
+            <Link key={m.id} href={`/members/${m.id}`} className="block no-underline">
+            <Card className="flex items-center gap-3 p-3.5! transition hover:shadow-md">
               <Avatar name={m.name} avatarUrl={m.id === me.id ? (myPhoto ?? m.avatar_url) : m.avatar_url} size={48} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[14.5px] font-bold">
@@ -120,6 +125,7 @@ export function MembersClient({ members }: { members: Profile[] }) {
                 <span className="rounded-full bg-plum-bg px-2 py-0.5 text-[10px] font-extrabold text-plum-ink">Admin</span>
               )}
             </Card>
+            </Link>
           ))}
         </div>
       )}

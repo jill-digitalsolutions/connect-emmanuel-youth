@@ -45,6 +45,24 @@ export interface Database {
         };
         Relationships: [];
       };
+      ministries: {
+        Row: { id: string; name: string; created_at: string };
+        Insert: { id?: string; name: string; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["ministries"]["Insert"]>;
+        Relationships: [];
+      };
+      ministry_members: {
+        Row: { id: string; ministry_id: string; user_id: string; role: string; created_at: string };
+        Insert: { id?: string; ministry_id: string; user_id: string; role?: string; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["ministry_members"]["Insert"]>;
+        Relationships: [];
+      };
+      profile_private: {
+        Row: { user_id: string; address: string | null; updated_at: string };
+        Insert: { user_id: string; address?: string | null; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["profile_private"]["Insert"]>;
+        Relationships: [];
+      };
       chat_messages: {
         Row: {
           id: string;
